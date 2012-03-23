@@ -32,18 +32,22 @@ macx {
   MOC_DIR = ../httppp-build-macos/moc
 }
 QMAKE_CXXFLAGS += -Wextra
-QMAKE_RPATHDIR = # no rpath in linking
+#QMAKE_RPATHDIR = # no rpath in linking
 
 SOURCES += main.cpp \
     pcapengine.cpp \
     pcapthread.cpp \
     pcappacket.cpp \
-    printer.cpp
+    printer.cpp \
+    pcapethernetpacket.cpp \
+    pcapipv4packet.cpp
 
-win32:INCLUDEPATH += pcap-win32
+win32:INCLUDEPATH += win32_include
 
 HEADERS += \
     pcapengine.h \
     pcapthread.h \
     pcappacket.h \
-    printer.h
+    printer.h \
+    pcapethernetpacket.h \
+    pcapipv4packet.h

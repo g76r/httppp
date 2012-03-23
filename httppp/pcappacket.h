@@ -5,22 +5,30 @@
 #include <QtDebug>
 #include <pcap/pcap.h>
 #include <QByteArray>
+#include <QDateTime>
 
 class PcapEngine;
 
 class PcapPacketData : public QSharedData {
 private:
-  quint64 _timestamp; // in microseconds
+  quint64 _timestamp; // in microseconds since 1970
   quint32 _wirelen;
   QByteArray _payload;
 
 public:
   inline PcapPacketData() : _timestamp(0), _wirelen(0) { }
+  inline PcapPacketData(const PcapPacketData &other)
+    : QSharedData(), _timestamp(other._timestamp), _wirelen(other._wirelen),
+      _payload(other._payload) {
+  }
   inline PcapPacketData(const struct pcap_pkthdr* pkthdr, const u_char* packet)
-    : _timestamp(pkthdr->ts.tv_usec + pkthdr->ts.tv_sec*(1LL<<32)),
+    : _timestamp(pkthdr->ts.tv_usec + pkthdr->ts.tv_sec*(1000000LL)),
       _wirelen(pkthdr->len), _payload((const char*)packet, pkthdr->caplen) {
   }
-  inline quint64 timestamp() const { return _timestamp; }
+  inline quint64 usecSince1970() const { return _timestamp; }
+  inline QDateTime timestamp() const {
+    return QDateTime::fromMSecsSinceEpoch(_timestamp/1000);
+  }
   inline quint32 wirelen() const { return _wirelen; }
   inline QByteArray payload() const { return _payload; }
   inline QString english() const {
@@ -42,7 +50,8 @@ private:
 public:
   inline PcapPacket() { d = new PcapPacketData(); }
   inline PcapPacket(const PcapPacket &other) : d(other.d) { }
-  inline quint64 timestamp() const { return d->timestamp(); }
+  inline QDateTime timestamp() const { return d->timestamp(); }
+  inline quint64 usecSince1970() const { return d->usecSince1970(); }
   inline quint32 wirelen() const { return d->wirelen(); }
   inline QByteArray payload() const { return d->payload(); }
   inline QString english() const { return d->english(); }
