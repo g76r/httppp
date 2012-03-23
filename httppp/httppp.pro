@@ -1,0 +1,49 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2012-03-22T23:54:57
+#
+#-------------------------------------------------
+
+QT       += core
+QT       -= gui
+QT += network
+LIBS += -lpcap
+
+TARGET = httppp
+CONFIG   += console
+CONFIG   -= app_bundle
+
+TEMPLATE = app
+
+linux-g++ {
+  UI_DIR = ../httppp-build-linux/ui
+  UI_HEADERS_DIR = ../httppp-build-linux/ui/include
+  UI_SOURCES_DIR = ../httppp-build-linux/ui/src
+  OBJECTS_DIR = ../httppp-build-linux/obj
+  RCC_DIR = ../httppp-build-linux/rcc
+  MOC_DIR = ../httppp-build-linux/moc
+}
+macx {
+  UI_DIR = ../httppp-build-macos/ui
+  UI_HEADERS_DIR = ../httppp-build-macos/ui/include
+  UI_SOURCES_DIR = ../httppp-build-macos/ui/src
+  OBJECTS_DIR = ../httppp-build-macos/obj
+  RCC_DIR = ../httppp-build-macos/rcc
+  MOC_DIR = ../httppp-build-macos/moc
+}
+QMAKE_CXXFLAGS += -Wextra
+QMAKE_RPATHDIR = # no rpath in linking
+
+SOURCES += main.cpp \
+    pcapengine.cpp \
+    pcapthread.cpp \
+    pcappacket.cpp \
+    printer.cpp
+
+win32:INCLUDEPATH += pcap-win32
+
+HEADERS += \
+    pcapengine.h \
+    pcapthread.h \
+    pcappacket.h \
+    printer.h
