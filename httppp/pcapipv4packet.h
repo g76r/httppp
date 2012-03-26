@@ -34,34 +34,7 @@ protected:
 public:
   /** Construct an IP packet fragment from a layer 2 frame.
     */
-  inline PcapIPv4PacketData(const PcapLayer2Packet &packet)
-    : PcapLayer3PacketData(0x800) {
-    int layer2DataSize = packet.payload().size();
-    const quint8 *layer2Data = (const quint8 *)packet.payload().constData();
-    if (layer2DataSize < 20) {
-      reset();
-      return;
-    }
-    _version = layer2Data[0] >> 4;
-    _headerSize = layer2Data[0] & 0xf;
-    _tos = layer2Data[1];
-    _totalSize = (layer2Data[2] << 8) + layer2Data[3];
-    _identification = (layer2Data[4] << 8) + layer2Data[5];
-    // TODO flags and fragmentoffset
-    _ttl = layer2Data[8];
-    _layer4Proto = layer2Data[9];
-    _headerChecksum = (layer2Data[10] << 8) + layer2Data[11];
-    ::memccpy(_src, layer2Data+12, 4, 1);
-    ::memccpy(_dst, layer2Data+16, 4, 1);
-    //qDebug() << "PcapIPv4Packet" << size << _headerSize
-    //         << _version;
-    if (layer2DataSize < _headerSize*4 || _headerSize*4 < 20) {
-      reset();
-      return;
-    }
-    _payload = QByteArray((const char *)layer2Data + _headerSize*4,
-                          layer2DataSize - _headerSize*4);
-  }
+  PcapIPv4PacketData(const PcapLayer2Packet &packet);
   inline PcapIPv4PacketData(const PcapIPv4PacketData &other)
     : PcapLayer3PacketData(other.layer3Proto(), other._payload),
       _version(other._version), _headerSize(other._headerSize),
@@ -110,7 +83,8 @@ public:
                         L2TP = 115, SCTP = 132, FC = 133, UDPLite = 136,
                         MPLS = 137 };
 
-  inline explicit PcapIPv4Packet(const PcapLayer2Packet &packet)
+  inline explicit PcapIPv4Packet(const PcapLayer2Packet &packet
+                                 = PcapLayer2Packet())
     : PcapLayer3Packet(new PcapIPv4PacketData(packet)) { }
   inline PcapIPv4Packet(const PcapIPv4Packet &other)
     : PcapLayer3Packet(other) { }

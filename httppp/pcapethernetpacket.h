@@ -8,7 +8,6 @@ class PcapEthernetPacketData : public PcapLayer2PacketData {
 protected:
   quint8 _dst[6];
   quint8 _src[6];
-  quint16 _layer3Proto;
 
 public:
   inline explicit PcapEthernetPacketData(const PcapLayer1Packet &packet)
@@ -18,7 +17,6 @@ public:
     if (size < 18) {
       ::memset(_dst, 0 , 6);
       ::memset(_src, 0 , 6);
-      _layer3Proto = 0;
     } else {
       ::memcpy(_dst, data, 6);
       ::memcpy(_src, data+6, 6);
@@ -29,8 +27,8 @@ public:
     }
   }
   inline PcapEthernetPacketData(const PcapEthernetPacketData &other)
-    : PcapLayer2PacketData(other.layer2Proto(), other._payload),
-      _layer3Proto(other._layer3Proto) {
+    : PcapLayer2PacketData(other.layer2Proto(), other.layer3Proto(),
+                           other._payload) {
     ::memcpy(_dst, other._dst, 6);
     ::memcpy(_src, other._src, 6);
   }
@@ -50,7 +48,6 @@ public:
         .arg(_src[4], 2, 16, QLatin1Char('0'))
         .arg(_src[5], 2, 16, QLatin1Char('0'));
   }
-  inline quint16 layer3Proto() const { return _layer3Proto; }
   QString english() const;
 };
 
@@ -62,7 +59,6 @@ public:
     : PcapLayer2Packet(other) { }
   inline QString dst() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->dst(); }
   inline QString src() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->src(); }
-  inline quint16 layer3Proto() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->layer3Proto(); }
 };
 
 #endif // PCAPETHERNETPACKET_H

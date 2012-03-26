@@ -43,7 +43,11 @@ SOURCES += main.cpp \
     pcapipv4packet.cpp \
     pcapipv4stack.cpp \
     pcaplayer2packet.cpp \
-    pcaplayer3packet.cpp
+    pcaplayer3packet.cpp \
+    pcapethernetstack.cpp \
+    pcaptcpstack.cpp \
+    pcaptcpconversation.cpp \
+    pcaptcppacket.cpp
 
 win32:INCLUDEPATH += win32_include
 
@@ -56,4 +60,8 @@ HEADERS += \
     pcapipv4packet.h \
     pcapipv4stack.h \
     pcaplayer2packet.h \
-    pcaplayer3packet.h
+    pcaplayer3packet.h \
+    pcapethernetstack.h \
+    pcaptcpstack.h \
+    pcaptcpconversation.h \
+    pcaptcppacket.h

@@ -8,13 +8,20 @@
 class PcapIPv4Stack : public QObject {
   Q_OBJECT
 public:
-  explicit PcapIPv4Stack(QObject *parent = 0);
-  
+  inline explicit PcapIPv4Stack(QObject *parent = 0) : QObject(parent) { }
+
 signals:
-  void wholePacketReceived(PcapIPv4Packet packet);
+  /** Emititng generic layer 3 defragmented packet.
+    */
+  void layer3PacketReceived(PcapLayer3Packet packet);
+  /** Emititng IPv4 defragmented packet.
+    */
+  void ipv4PacketReceived(PcapIPv4Packet packet);
 
 public slots:
-  void fragmentedPacketReceived(PcapLayer2Packet packet);
+  /** Receiving layer 2 packet, potentially fragmented.
+    */
+  void layer2PacketReceived(PcapLayer2Packet packet);
 
 private:
   Q_DISABLE_COPY(PcapIPv4Stack)

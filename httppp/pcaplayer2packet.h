@@ -8,16 +8,19 @@
 class PcapLayer2PacketData : public QSharedData {
 protected:
   quint16 _layer2Proto;
+  quint16 _layer3Proto;
   QByteArray _payload;
 
 public:
   inline explicit PcapLayer2PacketData(
-      quint16 proto = 0, QByteArray payload = QByteArray())
-    : _layer2Proto(proto), _payload(payload) { }
+      quint16 layer2Proto = 0, quint16 layer3Proto = 0,
+      QByteArray payload = QByteArray()) : _layer2Proto(layer2Proto),
+    _layer3Proto(layer3Proto), _payload(payload) { }
   inline PcapLayer2PacketData(const PcapLayer2PacketData &other)
     : QSharedData(), _layer2Proto(other._layer2Proto),
-      _payload(other._payload) { }
+      _layer3Proto(other._layer3Proto), _payload(other._payload) { }
   inline quint16 layer2Proto() const { return _layer2Proto; }
+  inline quint16 layer3Proto() const { return _layer3Proto; }
   inline QByteArray payload() const { return _payload; }
   virtual QString english() const;
 };
@@ -34,6 +37,7 @@ public:
   explicit inline PcapLayer2Packet() : d(new PcapLayer2PacketData()) { }
   inline PcapLayer2Packet(const PcapLayer2Packet &other) : d(other.d) { }
   inline quint16 layer2Proto() const { return d->layer2Proto(); }
+  inline quint16 layer3Proto() const { return d->layer3Proto(); }
   inline QByteArray payload() const { return d->payload(); }
   inline bool isNull() const { return payload().isNull(); }
   inline QString english() const { return d->english(); }
