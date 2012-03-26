@@ -6,7 +6,10 @@
 #include <QByteArray>
 #include <QSharedData>
 
+class PcapTcpPacket;
+
 class PcapTcpPacketData : public QSharedData {
+  friend class PcapTcpPacket;
 protected:
   quint16 _srcPort;
   quint16 _dstPort;
@@ -112,6 +115,8 @@ public:
   inline QByteArray payload() const { return d->payload(); }
   inline PcapIPv4Packet ip() const { return d->ip(); }
   QString english() const { return d->english(); }
+  inline bool isNull() const { return !d->srcPort(); }
+  inline bool isEmpty() const { return d->payload().isEmpty(); }
 };
 
 inline QDebug operator<<(QDebug dbg, const PcapTcpPacket &pp) {

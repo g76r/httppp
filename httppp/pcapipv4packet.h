@@ -5,7 +5,10 @@
 #include "pcaplayer2packet.h"
 #include "pcaplayer3packet.h"
 
+class PcapIPv4Packet;
+
 class PcapIPv4PacketData : public PcapLayer3PacketData {
+friend class PcapIPv4Packet;
 protected:
   quint8/*4*/ _version;
   quint8/*4*/ _headerSize; // in 32 bits words
@@ -63,6 +66,12 @@ public:
     return QString("%1.%2.%3.%4")
         .arg(_dst[0]).arg(_dst[1]).arg(_dst[2]).arg(_dst[3]);
   }
+  inline quint32 srcAsInt() const {
+    return 0x1000000*_src[0] + 0x10000*_src[1] + 0x100*_src[2] + _src[3];
+  }
+  inline quint32 dstAsInt() const {
+    return 0x1000000*_dst[0] + 0x10000*_dst[1] + 0x100*_dst[2] + _dst[3];
+  }
   inline quint32 layer4Proto() const { return _layer4Proto; }
   /** @return in bytes (= actual header field * 4)
     */
@@ -98,6 +107,8 @@ public:
   inline quint16 layer4Proto() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->layer4Proto(); }
   inline QString src() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->src(); }
   inline QString dst() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->dst(); }
+  inline quint32 srcAsInt() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->srcAsInt(); }
+  inline quint32 dstAsInt() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->dstAsInt(); }
 };
 
 #endif // PCAPIPV4PACKET_H

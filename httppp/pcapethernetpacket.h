@@ -14,15 +14,14 @@ public:
     : PcapLayer2PacketData(PcapLayer2Packet::EthernetII) {
     int size = packet.payload().size();
     const quint8 *data = (const quint8 *)packet.payload().constData();
-    if (size < 18) {
+    if (size < 14) {
       ::memset(_dst, 0 , 6);
       ::memset(_src, 0 , 6);
     } else {
       ::memcpy(_dst, data, 6);
       ::memcpy(_src, data+6, 6);
       _layer3Proto = (data[12] << 8) + data[13];
-      _payload = QByteArray((const char *)data+14, size-18);
-      // LATER do something with 4 last bytes CRC
+      _payload = QByteArray((const char *)data+14, size-14);
       // LATER handle LLC frames
     }
   }

@@ -22,6 +22,10 @@ int main(int argc, char *argv[]) {
   //                 &p, SLOT(layer3PacketReceived(PcapLayer3Packet)));
   QObject::connect(&ip, SIGNAL(ipv4PacketReceived(PcapIPv4Packet)),
                    &tcp, SLOT(ipPacketReceived(PcapIPv4Packet)));
+  QObject::connect(&tcp, SIGNAL(tcpUpstreamPacket(PcapTcpPacket,PcapTcpConversation)),
+                   &p, SLOT(tcpUpstreamPacket(PcapTcpPacket,PcapTcpConversation)));
+  QObject::connect(&tcp, SIGNAL(tcpDownstreamPacket(PcapTcpPacket,PcapTcpConversation)),
+                   &p, SLOT(tcpDownstreamPacket(PcapTcpPacket,PcapTcpConversation)));
   // the following quit condition would not work if stacks become multithreaded
   QObject::connect(&pe, SIGNAL(captureTerminated()), &a, SLOT(quit()));
   pe.start();

@@ -34,7 +34,8 @@ PcapIPv4PacketData::PcapIPv4PacketData(const PcapLayer2Packet &packet)
     return;
   }
   _payload = QByteArray((const char *)layer2Data + _headerSize*4,
-                        layer2DataSize - _headerSize*4);
+                        std::min(layer2DataSize, (int)_totalSize)
+                        - _headerSize*4);
 }
 
 QString PcapIPv4PacketData::english() const {

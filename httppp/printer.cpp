@@ -32,3 +32,13 @@ void Printer::layer2PacketReceived(PcapLayer2Packet packet) {
 void Printer::layer3PacketReceived(PcapLayer3Packet packet) {
   qDebug() << packet;
 }
+
+void Printer::tcpUpstreamPacket(PcapTcpPacket packet,
+                                PcapTcpConversation conversation) {
+  qDebug() << conversation.id() << ">>>" << packet;
+}
+
+void Printer::tcpDownstreamPacket(PcapTcpPacket packet,
+                                  PcapTcpConversation conversation) {
+  qDebug() << conversation.id() << "<<<" << packet;
+}

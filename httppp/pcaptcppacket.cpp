@@ -1,9 +1,12 @@
 #include "pcaptcppacket.h"
 
 PcapTcpPacketData::PcapTcpPacketData(PcapIPv4Packet packet) : _ip(packet) {
+  if (packet.layer4Proto() != PcapIPv4Packet::TCP) // ignore non-TCP packets
+    return;
   int size = packet.payload().size();
   const quint8 *data = (const quint8 *)packet.payload().constData();
   if (size < 20) {
+    qDebug() << "tcp packet too short" << packet;
     reset();
     return;
   }
@@ -28,6 +31,6 @@ PcapTcpPacketData::PcapTcpPacketData(PcapIPv4Packet packet) : _ip(packet) {
 
 
 QString PcapTcpPacketData::english() const {
-  return QString("PcapTcpPacket(%1, %2, %3, %4)").arg(src()).arg(dst())
-      .arg(syn() || rst() || fin()).arg(payload().size());
+  return QString("PcapTcpPacket(%1, %2, %3, %4, %5)").arg(src()).arg(dst())
+      .arg(_seqNumber).arg(syn() || rst() || fin()).arg(payload().size());
 }
