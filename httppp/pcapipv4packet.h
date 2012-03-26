@@ -1,18 +1,12 @@
 #ifndef PCAPIPV4PACKET_H
 #define PCAPIPV4PACKET_H
 
-#include <QObject>
 #include <QtDebug>
+#include "pcaplayer2packet.h"
+#include "pcaplayer3packet.h"
 
-class PcapIPv4Packet {
-public:
-  enum IpProtocol { ICMP = 1, IGMP = 2, IPv4 = 4, TCP = 6, UDP = 17, IPv6 = 41,
-                    RSVP = 46, GRE = 47, IPIP = 94, IPX = 111, VRRP = 112,
-                    L2TP = 115, SCTP = 132, FC = 133, UDPLite = 136,
-                    MPLS = 137 };
-private:
-  quint32 _payloadSize;
-  const quint8 *_payload;
+class PcapIPv4PacketData : public PcapLayer3PacketData {
+protected:
   quint8/*4*/ _version;
   quint8/*4*/ _headerSize; // in 32 bits words
   quint8 _tos;
@@ -21,50 +15,73 @@ private:
   bool _unusedFlag;
   bool _dontFragment;
   bool _moreFragments; // this packet is not the last fragment
-  quint16/*13*/ _fragmentOffset;
+  quint16/*13*/ _fragmentOffset; // 64 bits words
   quint8 _ttl;
-  quint8 _proto;
+  quint8 _layer4Proto;
   quint16 _headerChecksum;
   quint8 _src[4];
   quint8 _dst[4];
 
   inline void reset() {
-    _payloadSize = _version = _headerSize = _tos = _totalSize = _identification
-        = _fragmentOffset = _ttl = _proto = _headerChecksum = 0;
+    _version = _headerSize = _tos = _totalSize = _identification
+        = _fragmentOffset = _ttl = _layer4Proto = _headerChecksum = 0;
     _unusedFlag = _dontFragment = _moreFragments = false;
     ::memset(_src, 0, 4);
     ::memset(_dst, 0, 4);
+    _payload.clear();
   }
 
 public:
-  inline PcapIPv4Packet(quint32 size, const quint8 *data) {
-    if (size < 20) {
+  /** Construct an IP packet fragment from a layer 2 frame.
+    */
+  inline PcapIPv4PacketData(const PcapLayer2Packet &packet)
+    : PcapLayer3PacketData(0x800) {
+    int layer2DataSize = packet.payload().size();
+    const quint8 *layer2Data = (const quint8 *)packet.payload().constData();
+    if (layer2DataSize < 20) {
       reset();
       return;
     }
-    _version = data[0] >> 4;
-    _headerSize = data[0] & 0xf;
-    _tos = data[1];
-    _totalSize = (data[2] << 8) + data[3];
-    _identification = (data[4] << 8) + data[5];
+    _version = layer2Data[0] >> 4;
+    _headerSize = layer2Data[0] & 0xf;
+    _tos = layer2Data[1];
+    _totalSize = (layer2Data[2] << 8) + layer2Data[3];
+    _identification = (layer2Data[4] << 8) + layer2Data[5];
     // TODO flags and fragmentoffset
-    _ttl = data[8];
-    _proto = data[9];
-    _headerChecksum = (data[10] << 8) + data[11];
-    ::memccpy(_src, data+12, 4, 1);
-    ::memccpy(_dst, data+16, 4, 1);
+    _ttl = layer2Data[8];
+    _layer4Proto = layer2Data[9];
+    _headerChecksum = (layer2Data[10] << 8) + layer2Data[11];
+    ::memccpy(_src, layer2Data+12, 4, 1);
+    ::memccpy(_dst, layer2Data+16, 4, 1);
     //qDebug() << "PcapIPv4Packet" << size << _headerSize
     //         << _version;
-    if (size < _headerSize*4 || _headerSize*4 < 20) {
+    if (layer2DataSize < _headerSize*4 || _headerSize*4 < 20) {
       reset();
       return;
     }
-    _payload = data+_headerSize*4;
-    _payloadSize = size - _headerSize*4;
+    _payload = QByteArray((const char *)layer2Data + _headerSize*4,
+                          layer2DataSize - _headerSize*4);
   }
-  inline bool isNull() const { return !_payload; }
-  inline quint32 payloadSize() const { return _payloadSize; }
-  inline const quint8 *payload() const { return _payload; }
+  inline PcapIPv4PacketData(const PcapIPv4PacketData &other)
+    : PcapLayer3PacketData(other.layer3Proto(), other._payload),
+      _version(other._version), _headerSize(other._headerSize),
+      _tos(other._tos), _totalSize(other._totalSize),
+      _identification(other._identification), _unusedFlag(other._unusedFlag),
+      _dontFragment(other._dontFragment), _moreFragments(other._moreFragments),
+      _fragmentOffset(other._fragmentOffset), _ttl(other._ttl),
+      _layer4Proto(other._layer4Proto), _headerChecksum(other._headerChecksum) {
+    ::memcpy(_src, other._src, 4);
+    ::memcpy(_dst, other._dst, 4);
+  }
+  inline quint16 layer3Proto() const { return _layer3Proto; }
+  QString english() const;
+  inline quint16 totalSize() const { return _totalSize; }
+  inline quint16 identification() const { return _identification; }
+  inline bool dontFragment() const { return _dontFragment; }
+  inline bool moreFragments() const { return _moreFragments; }
+  /** @return in 64 bits words as in packet header
+    */
+  inline quint16 fragmentOffset() const { return _fragmentOffset; }
   inline QString src() const {
     return QString("%1.%2.%3.%4")
         .arg(_src[0]).arg(_src[1]).arg(_src[2]).arg(_src[3]);
@@ -73,16 +90,40 @@ public:
     return QString("%1.%2.%3.%4")
         .arg(_dst[0]).arg(_dst[1]).arg(_dst[2]).arg(_dst[3]);
   }
-  inline quint32 proto() const { return _proto; }
+  inline quint32 layer4Proto() const { return _layer4Proto; }
   /** @return in bytes (= actual header field * 4)
     */
-  inline quint32 headerSize() const {
+  inline quint32 headerSizeInBytes() const {
     return _headerSize*4;
   }
-  inline QByteArray payloadToByteArray() const {
-    // LATER avoid deep copy
-    return QByteArray((const char*)_payload, _payloadSize);
+  /** @return in 4 bytes words count (= bytes / 4)
+    */
+  inline quint32 headerSize() const {
+    return _headerSize;
   }
+};
+
+class PcapIPv4Packet : public PcapLayer3Packet {
+public:
+  enum Layer4Protocol { ICMP = 1, IGMP = 2, IPv4 = 4, TCP = 6, UDP = 17, IPv6 = 41,
+                        RSVP = 46, GRE = 47, IPIP = 94, IPX = 111, VRRP = 112,
+                        L2TP = 115, SCTP = 132, FC = 133, UDPLite = 136,
+                        MPLS = 137 };
+
+  inline explicit PcapIPv4Packet(const PcapLayer2Packet &packet)
+    : PcapLayer3Packet(new PcapIPv4PacketData(packet)) { }
+  inline PcapIPv4Packet(const PcapIPv4Packet &other)
+    : PcapLayer3Packet(other) { }
+  inline quint16 totalSize() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->totalSize(); }
+  inline quint16 identification() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->identification(); }
+  inline bool dontFragment() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->dontFragment(); }
+  inline bool moreFragments() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->moreFragments(); }
+  /** @return in 64 bits words as in packet header
+    */
+  inline quint16 fragmentOffset() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->fragmentOffset(); }
+  inline quint16 layer4Proto() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->layer4Proto(); }
+  inline QString src() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->src(); }
+  inline QString dst() const { return static_cast<const PcapIPv4PacketData*>(d.constData())->dst(); }
 };
 
 #endif // PCAPIPV4PACKET_H

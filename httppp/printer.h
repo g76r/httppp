@@ -2,7 +2,7 @@
 #define PRINTER_H
 
 #include <QObject>
-#include "pcappacket.h"
+#include "pcaplayer1packet.h"
 
 class Printer : public QObject {
   Q_OBJECT
@@ -10,7 +10,7 @@ public:
   inline explicit Printer(QObject *parent = 0) : QObject(parent) { }
   
 public slots:
-  void packetReceived(PcapPacket packet);
+  void layer2PacketReceived(PcapLayer1Packet packet);
 
 private:
   Q_DISABLE_COPY(Printer)

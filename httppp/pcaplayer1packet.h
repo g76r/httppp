@@ -9,19 +9,19 @@
 
 class PcapEngine;
 
-class PcapPacketData : public QSharedData {
+class PcapLayer1PacketData : public QSharedData {
 private:
   quint64 _timestamp; // in microseconds since 1970
   quint32 _wirelen;
   QByteArray _payload;
 
 public:
-  inline PcapPacketData() : _timestamp(0), _wirelen(0) { }
-  inline PcapPacketData(const PcapPacketData &other)
+  inline PcapLayer1PacketData() : _timestamp(0), _wirelen(0) { }
+  inline PcapLayer1PacketData(const PcapLayer1PacketData &other)
     : QSharedData(), _timestamp(other._timestamp), _wirelen(other._wirelen),
       _payload(other._payload) {
   }
-  inline PcapPacketData(const struct pcap_pkthdr* pkthdr, const u_char* packet)
+  inline PcapLayer1PacketData(const struct pcap_pkthdr* pkthdr, const u_char* packet)
     : _timestamp(pkthdr->ts.tv_usec + pkthdr->ts.tv_sec*(1000000LL)),
       _wirelen(pkthdr->len), _payload((const char*)packet, pkthdr->caplen) {
   }
@@ -32,24 +32,25 @@ public:
   inline quint32 wirelen() const { return _wirelen; }
   inline QByteArray payload() const { return _payload; }
   inline QString english() const {
-    return QString("PcapPacket(%1, %2, %3, %4)").arg(_timestamp).arg(_wirelen)
+    return QString("PcapPacket(%1, %2, %3, %4)")
+        .arg(timestamp().time().toString("HH:mm:ss,zzz")).arg(_wirelen)
         .arg(_payload.size()).arg(_payload.toHex().constData());
   }
 };
 
-class PcapPacket {
+class PcapLayer1Packet {
   friend class PcapEngine;
 private:
-  QSharedDataPointer<PcapPacketData> d;
+  QSharedDataPointer<PcapLayer1PacketData> d;
 
-  inline PcapPacket(const struct pcap_pkthdr* pkthdr,
+  inline PcapLayer1Packet(const struct pcap_pkthdr* pkthdr,
                     const u_char* packet) {
-    d = new PcapPacketData(pkthdr, packet);
+    d = new PcapLayer1PacketData(pkthdr, packet);
   }
 
 public:
-  inline PcapPacket() { d = new PcapPacketData(); }
-  inline PcapPacket(const PcapPacket &other) : d(other.d) { }
+  inline PcapLayer1Packet() { d = new PcapLayer1PacketData(); }
+  inline PcapLayer1Packet(const PcapLayer1Packet &other) : d(other.d) { }
   inline QDateTime timestamp() const { return d->timestamp(); }
   inline quint64 usecSince1970() const { return d->usecSince1970(); }
   inline quint32 wirelen() const { return d->wirelen(); }
@@ -57,10 +58,9 @@ public:
   inline QString english() const { return d->english(); }
 };
 
-inline QDebug operator<<(QDebug dbg, const PcapPacket &pp) {
+inline QDebug operator<<(QDebug dbg, const PcapLayer1Packet &pp) {
   dbg.nospace() << pp.english();
   return dbg.space();
 }
 
 #endif // PCAPPACKET_H
-

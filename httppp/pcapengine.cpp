@@ -3,11 +3,13 @@
 #include <QThread>
 #include "pcapthread.h"
 #include <QMetaType>
+#include "pcaplayer2packet.h"
 
 PcapEngine::PcapEngine(QString filename) : _pcap(0), _filename(filename) {
   _thread = new PcapThread(this);
   moveToThread(_thread);
-  qRegisterMetaType<PcapPacket>("PcapPacket");
+  qRegisterMetaType<PcapLayer1Packet>("PcapLayer1Packet");
+  qRegisterMetaType<PcapLayer2Packet>("PcapLayer2Packet");
   connect(_thread, SIGNAL(finished()), this, SIGNAL(captureTerminated()));
   loadFile(filename);
 }
@@ -36,9 +38,9 @@ void PcapEngine::packetHandler(const struct pcap_pkthdr* pkthdr,
   //QByteArray ba((const char *)packet, pkthdr->caplen);
   //qDebug() << "PcapEngine::packetHandler" //<< (long)pkthdr << (long)packet
   //         << ba.toHex();
-  PcapPacket pp(pkthdr, packet);
+  PcapLayer1Packet pp(pkthdr, packet);
   //qDebug() << pp;
-  emit packetReceived(pp);
+  emit layer1PacketReceived(pp);
 }
 
 void PcapEngine::callback(u_char *user, const struct pcap_pkthdr* pkthdr,

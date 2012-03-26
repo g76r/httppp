@@ -1,50 +1,39 @@
 #ifndef PCAPETHERNETPACKET_H
 #define PCAPETHERNETPACKET_H
 
-#include "pcappacket.h"
+#include "pcaplayer1packet.h"
+#include "pcaplayer2packet.h"
 
-#define ETHERTYPE_PUP           0x0200          /* Xerox PUP */
-#define ETHERTYPE_SPRITE        0x0500          /* Sprite */
-#define ETHERTYPE_IP            0x0800          /* IP */
-#define ETHERTYPE_ARP           0x0806          /* Address resolution */
-#define ETHERTYPE_REVARP        0x8035          /* Reverse ARP */
-#define ETHERTYPE_AT            0x809B          /* AppleTalk protocol */
-#define ETHERTYPE_AARP          0x80F3          /* AppleTalk ARP */
-#define ETHERTYPE_VLAN          0x8100          /* IEEE 802.1Q VLAN tagging */
-#define ETHERTYPE_IPX           0x8137          /* IPX */
-#define ETHERTYPE_IPV6          0x86dd          /* IP protocol version 6 */
-#define ETHERTYPE_LOOPBACK      0x9000          /* used to test interfaces */
-
-/** Ethernet II packet dissector.
-  */
-class PcapEthernetPacket {
-private:
-  quint32 _payloadSize;
-  const quint8 *_payload;
+class PcapEthernetPacketData : public PcapLayer2PacketData {
+protected:
   quint8 _dst[6];
   quint8 _src[6];
-  quint16 _proto;
+  quint16 _layer3Proto;
 
 public:
-  inline PcapEthernetPacket(quint32 size, const quint8 *data) {
+  inline explicit PcapEthernetPacketData(const PcapLayer1Packet &packet)
+    : PcapLayer2PacketData(PcapLayer2Packet::EthernetII) {
+    int size = packet.payload().size();
+    const quint8 *data = (const quint8 *)packet.payload().constData();
     if (size < 18) {
       ::memset(_dst, 0 , 6);
       ::memset(_src, 0 , 6);
-      _proto = _payloadSize = 0;
-      _payload = 0;
+      _layer3Proto = 0;
     } else {
       ::memcpy(_dst, data, 6);
       ::memcpy(_src, data+6, 6);
-      _proto = (data[12] << 8) + data[13];
-      _payload = data+14;
-      _payloadSize = size-18;
+      _layer3Proto = (data[12] << 8) + data[13];
+      _payload = QByteArray((const char *)data+14, size-18);
       // LATER do something with 4 last bytes CRC
       // LATER handle LLC frames
     }
   }
-  inline bool isNull() const { return !_payload; }
-  inline quint32 payloadSize() const { return _payloadSize; }
-  inline const quint8 *payload() const { return _payload; }
+  inline PcapEthernetPacketData(const PcapEthernetPacketData &other)
+    : PcapLayer2PacketData(other.layer2Proto(), other._payload),
+      _layer3Proto(other._layer3Proto) {
+    ::memcpy(_dst, other._dst, 6);
+    ::memcpy(_src, other._src, 6);
+  }
   inline QString dst() const {
     return QString("%1:%2:%3:%4:%5:%6").arg(_dst[0], 2, 16, QLatin1Char('0'))
         .arg(_dst[1], 2, 16, QLatin1Char('0'))
@@ -61,14 +50,19 @@ public:
         .arg(_src[4], 2, 16, QLatin1Char('0'))
         .arg(_src[5], 2, 16, QLatin1Char('0'));
   }
-  inline quint16 proto() const { return _proto; }
-  inline QByteArray payloadToByteArray() const {
-    // LATER avoid deep copy
-    return QByteArray((const char*)_payload, _payloadSize);
-  }
+  inline quint16 layer3Proto() const { return _layer3Proto; }
+  QString english() const;
+};
 
-private:
-  Q_DISABLE_COPY(PcapEthernetPacket)
+class PcapEthernetPacket : public PcapLayer2Packet {
+public:
+  inline explicit PcapEthernetPacket(const PcapLayer1Packet &packet)
+    : PcapLayer2Packet(new PcapEthernetPacketData(packet)) { }
+  inline PcapEthernetPacket(const PcapEthernetPacket &other)
+    : PcapLayer2Packet(other) { }
+  inline QString dst() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->dst(); }
+  inline QString src() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->src(); }
+  inline quint16 layer3Proto() const { return static_cast<const PcapEthernetPacketData*>(d.constData())->layer3Proto(); }
 };
 
 #endif // PCAPETHERNETPACKET_H

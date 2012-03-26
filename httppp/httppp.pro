@@ -37,17 +37,23 @@ QMAKE_CXXFLAGS += -Wextra
 SOURCES += main.cpp \
     pcapengine.cpp \
     pcapthread.cpp \
-    pcappacket.cpp \
+    pcaplayer1packet.cpp \
     printer.cpp \
     pcapethernetpacket.cpp \
-    pcapipv4packet.cpp
+    pcapipv4packet.cpp \
+    pcapipv4stack.cpp \
+    pcaplayer2packet.cpp \
+    pcaplayer3packet.cpp
 
 win32:INCLUDEPATH += win32_include
 
 HEADERS += \
     pcapengine.h \
     pcapthread.h \
-    pcappacket.h \
+    pcaplayer1packet.h \
     printer.h \
     pcapethernetpacket.h \
-    pcapipv4packet.h
+    pcapipv4packet.h \
+    pcapipv4stack.h \
+    pcaplayer2packet.h \
+    pcaplayer3packet.h

@@ -4,7 +4,7 @@
 #include <QString>
 #include <QObject>
 #include <pcap/pcap.h>
-#include "pcappacket.h"
+#include "pcaplayer1packet.h"
 
 class PcapThread;
 
@@ -23,7 +23,7 @@ public:
 
 signals:
   void captureTerminated();
-  void packetReceived(PcapPacket packet);
+  void layer1PacketReceived(PcapLayer1Packet packet);
 
 private:
   void packetHandler(const struct pcap_pkthdr* pkthdr,

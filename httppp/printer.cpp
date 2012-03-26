@@ -3,19 +3,20 @@
 #include "pcapethernetpacket.h"
 #include "pcapipv4packet.h"
 
-void Printer::packetReceived(PcapPacket packet) {
-  PcapEthernetPacket ether(packet.payload().size(),
-                        (const quint8*)packet.payload().constData());
-  if (ether.proto() != 0x800) {
+void Printer::layer2PacketReceived(PcapLayer1Packet packet) {
+  PcapEthernetPacket ether(packet);
+  if (ether.layer3Proto() != 0x800) {
     //qDebug() << "skipping non IPv4 packet";
     return;
   }
-  PcapIPv4Packet ip(ether.payloadSize(), ether.payload());
-  qDebug() << packet.timestamp().time().toString("HH:mm:ss,zzz")
+  PcapIPv4Packet ip(ether);
+  qDebug() << packet << ether << ip;
+  /*qDebug() << packet.timestamp().time().toString("HH:mm:ss,zzz")
            << packet.wirelen() << ether.dst() << ether.src()
            //<< QString::number(ether.proto(), 16)
-           << ip.src() << ip.dst() << ip.proto() << ip.headerSize()
-           << ip.payloadSize()
+           << ip.english();
+           //<< ip.src() << ip.dst() << ip.proto() << ip.headerSize()
+           //<< ip.payloadSize()
            //<< ip.payloadToByteArray().toHex()
-              ;
+              ;*/
 }
