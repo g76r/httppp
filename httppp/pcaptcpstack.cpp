@@ -40,7 +40,10 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextUpstreamNumber()) < 0) {
         // retransmission of already treated packet: nothing to do
-        qDebug() << conversation.id() << "RR>" << packet;
+        if (conversation.nextUpstreamNumber()-(qint32)(packet.seqNumber() == 1))
+            qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
+        else
+            qDebug() << conversation.id() << "RR>" << packet;
       } else {
         qDebug() << conversation.id() << "-->" << packet;
         // FIXME
@@ -62,7 +65,10 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextDownstreamNumber()) < 0){
         // retransmission of already treated packet: nothing to do
-        qDebug() << conversation.id() << "<RR" << packet;
+        if (conversation.nextDownstreamNumber()-(qint32)(packet.seqNumber()==1))
+          qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
+        else
+          qDebug() << conversation.id() << "<RR" << packet;
       } else {
         qDebug() << conversation.id() << "<--" << packet;
         // FIXME
