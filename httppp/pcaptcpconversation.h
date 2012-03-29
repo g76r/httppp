@@ -52,11 +52,13 @@ public:
         && d->_firstPacket.dstPort() == packet.dstPort()
         && d->_firstPacket.ip().srcAsInt() == packet.ip().srcAsInt()
         && d->_firstPacket.ip().dstAsInt() == packet.ip().dstAsInt(); }
-  inline bool operator ==(const PcapTcpConversation &other) const {
-    return d == other.d; }
   inline quint32 &nextUpstreamNumber() { return d->_nextUpstreamNumber; }
   inline quint32 &nextDownstreamNumber() { return d->_nextDownstreamNumber; }
   inline bool &numbersInitialized() { return d->_numbersInitialized; }
+  inline bool operator ==(const PcapTcpConversation &other) const {
+    return d == other.d; }
+  inline bool operator <(const PcapTcpConversation &other) const {
+    return id() < other.id(); }
 };
 
 inline QDebug operator<<(QDebug dbg, const PcapTcpConversation &o) {

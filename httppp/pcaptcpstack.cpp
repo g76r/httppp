@@ -17,7 +17,11 @@ void PcapTcpStack::ipPacketReceived(PcapIPv4Packet packet) {
     }
   }
   if (tcp.fin() || tcp.rst()) {
-    qDebug() << "   ignoring fin or rst new tcp packet" << tcp << tcp.fin() << tcp.rst();
+    // this avoids creating conversation for trailing fin-ack packets when the
+    // fin packet has been seen and the conversatino closed
+    // this is a hack and hides those packets, however this has no impact
+    // on upper layers
+    //qDebug() << "   ignoring fin or rst new tcp packet" << tcp << tcp.fin() << tcp.rst();
     return;
   }
   PcapTcpConversation c(tcp);
@@ -36,7 +40,18 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
       conversation.nextUpstreamNumber() +=
           conversation.numbersInitialized() || !packet.syn() || packet.ack()
           ? packet.payload().size() : 1;
-      // FIXME scan upstream packets if any
+      PcapTcpPacket packet2;
+      foreach (PcapTcpPacket p, _upstreamBuffer.values(conversation))
+        if (p.seqNumber() == conversation.nextUpstreamNumber()) {
+          packet2 = p;
+          break;
+        }
+      if (!packet2.isNull()) {
+        //qDebug() << "  found upstream buffered packet" << packet2;
+        dispatchPacket(packet2, conversation); // this is a recursive call
+        //qDebug() << "  removing buffered packet" << packet2;
+        _upstreamBuffer.remove(packet2);
+      }
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextUpstreamNumber()) < 0) {
         // retransmission of already treated packet: nothing to do
@@ -46,8 +61,8 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
             qDebug() << conversation.id() << "RR>" << packet;
       } else {
         qDebug() << conversation.id() << "-->" << packet;
-        // FIXME
-        //_upstreamBuffer.insertMulti(conversation, packet);
+        //qDebug() << "  inserting upstream buffered packet" << packet;
+        _upstreamBuffer.insertMulti(conversation, packet);
       }
     }
   } else {
@@ -61,7 +76,18 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
       conversation.nextDownstreamNumber() +=
           conversation.numbersInitialized() || !packet.syn() || !packet.ack()
           ? packet.payload().size() : 1;
-      // FIXME scan downstream packets if any
+      PcapTcpPacket packet2;
+      foreach (PcapTcpPacket p, _downstreamBuffer.values(conversation))
+        if (p.seqNumber() == conversation.nextDownstreamNumber()) {
+          packet2 = p;
+          break;
+        }
+      if (!packet2.isNull()) {
+        //qDebug() << "  found downstream buffered packet" << packet2;
+        dispatchPacket(packet2, conversation); // this is a recursive call
+        //qDebug() << "  removing buffered packet" << packet2;
+        _downstreamBuffer.remove(packet2);
+      }
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextDownstreamNumber()) < 0){
         // retransmission of already treated packet: nothing to do
@@ -71,21 +97,26 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
           qDebug() << conversation.id() << "<RR" << packet;
       } else {
         qDebug() << conversation.id() << "<--" << packet;
-        // FIXME
-        //_downstreamBuffer.insertMulti(conversation, packet);
+        //qDebug() << "  inserting downstream buffered packet" << packet;
+        _downstreamBuffer.insertMulti(conversation, packet);
       }
     }
     if (!conversation.numbersInitialized()) {
       conversation.numbersInitialized() = true;
     }
   }
-  // FIXME handle TCP deduplication and reordering
-  // FIXME remove TCP conversation after fin-ack
   if (packet.rst() || packet.fin()) {
     qDebug() << conversation.id() << "XXX";
     _conversations.remove(conversation);
-    // FIXME
-    //_upstreamBuffer.remove(conversation); // should be useless
-    //_downstreamBuffer.remove(conversation); // should be useless
+    if (_upstreamBuffer.values(conversation).size() != 0) { // should be useless
+      qDebug() << conversation.id() << "  remaining upstream buffered packets"
+               << _upstreamBuffer.size();
+      _upstreamBuffer.remove(conversation);
+    }
+    if (_downstreamBuffer.values(conversation).size() != 0) { // should be useless
+      qDebug() << conversation.id() << "  remaining downstream buffered packets"
+               << _downstreamBuffer.size();
+      _downstreamBuffer.remove(conversation);
+    }
   }
 }

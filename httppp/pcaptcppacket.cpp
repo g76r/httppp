@@ -1,10 +1,13 @@
 #include "pcaptcppacket.h"
 
 PcapTcpPacketData::PcapTcpPacketData(PcapIPv4Packet packet) : _ip(packet) {
-  if (packet.layer4Proto() != PcapIPv4Packet::TCP) // ignore non-TCP packets
+  if (packet.layer4Proto() != PcapIPv4Packet::TCP) { // ignore non-TCP packets
+    reset();
     return;
+  }
   int size = packet.payload().size();
   const quint8 *data = (const quint8 *)packet.payload().constData();
+  //qDebug() << "  PcapTcpPacketData" << size << packet;
   if (size < 20) {
     qDebug() << "tcp packet too short" << packet;
     reset();
