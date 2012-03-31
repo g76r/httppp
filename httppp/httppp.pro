@@ -1,11 +1,5 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2012-03-22T23:54:57
-#
-#-------------------------------------------------
-
 QT       += core
-QT       -= gui
+#QT       -= gui
 QT += network
 LIBS += -lpcap
 
@@ -47,7 +41,13 @@ SOURCES += main.cpp \
     pcapethernetstack.cpp \
     pcaptcpstack.cpp \
     pcaptcpconversation.cpp \
-    pcaptcppacket.cpp
+    pcaptcppacket.cpp \
+    httpppmainwindow.cpp \
+    tcpconversationmodel.cpp \
+    tcppacketmodel.cpp \
+    httprequestsmodel.cpp \
+    widget/enhancedtreeview.cpp \
+    widget/enhancedtableview.cpp
 
 win32:INCLUDEPATH += win32_include
 
@@ -64,4 +64,13 @@ HEADERS += \
     pcapethernetstack.h \
     pcaptcpstack.h \
     pcaptcpconversation.h \
-    pcaptcppacket.h
+    pcaptcppacket.h \
+    httpppmainwindow.h \
+    tcpconversationmodel.h \
+    tcppacketmodel.h \
+    httprequestsmodel.h \
+    widget/enhancedtreeview.h \
+    widget/enhancedtableview.h
+
+FORMS += \
+    httpppmainwindow.ui

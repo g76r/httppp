@@ -4,6 +4,7 @@
 #include <QSharedData>
 #include <QtDebug>
 #include "pcaptcppacket.h"
+#include <QList>
 
 class PcapTcpConversation;
 
@@ -15,6 +16,7 @@ private:
   quint32 _nextUpstreamNumber;
   quint32 _nextDownstreamNumber;
   bool _numbersInitialized;
+  QList<PcapTcpPacket> _packets;
 
 public:
   PcapTcpConversationData(PcapTcpPacket firstPacket = PcapTcpPacket());
@@ -22,7 +24,8 @@ public:
     : QSharedData(), _id(other._id), _firstPacket(other._firstPacket),
       _nextUpstreamNumber(other._nextUpstreamNumber),
       _nextDownstreamNumber(other._nextDownstreamNumber),
-      _numbersInitialized(other._numbersInitialized) { }
+      _numbersInitialized(other._numbersInitialized),
+      _packets(other._packets) { }
 };
 
 class PcapTcpConversation {
@@ -55,6 +58,12 @@ public:
   inline quint32 &nextUpstreamNumber() { return d->_nextUpstreamNumber; }
   inline quint32 &nextDownstreamNumber() { return d->_nextDownstreamNumber; }
   inline bool &numbersInitialized() { return d->_numbersInitialized; }
+  inline bool isNull() { return !id(); }
+  /** To avoid huge memory consumption, this list shold be left empty by
+    * network analyzers, however user interface may want to fill it for some
+    * selected conversations or during a limited time.
+    */
+  inline QList<PcapTcpPacket> &packets() { return d->_packets; }
   inline bool operator ==(const PcapTcpConversation &other) const {
     return d == other.d; }
   inline bool operator <(const PcapTcpConversation &other) const {

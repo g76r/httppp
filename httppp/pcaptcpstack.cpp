@@ -27,6 +27,7 @@ void PcapTcpStack::ipPacketReceived(PcapIPv4Packet packet) {
   PcapTcpConversation c(tcp);
   //qDebug() << c.id() << "   received new tcp packet" << tcp;
   _conversations.insert(c);
+  emit conversationStarted(c);
   dispatchPacket(tcp, c);
 }
 
@@ -55,12 +56,13 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextUpstreamNumber()) < 0) {
         // retransmission of already treated packet: nothing to do
-        if (conversation.nextUpstreamNumber()-(qint32)(packet.seqNumber() == 1))
-            qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
-        else
-            qDebug() << conversation.id() << "RR>" << packet;
+        if (conversation.nextUpstreamNumber()-(qint32)(packet.seqNumber() == 1)) {
+            //qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
+        } else {
+            //qDebug() << conversation.id() << "RR>" << packet;
+        }
       } else {
-        qDebug() << conversation.id() << "-->" << packet;
+        //qDebug() << conversation.id() << "-->" << packet;
         //qDebug() << "  inserting upstream buffered packet" << packet;
         _upstreamBuffer.insertMulti(conversation, packet);
       }
@@ -91,12 +93,13 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
     } else {
       if ((qint32)(packet.seqNumber()-conversation.nextDownstreamNumber()) < 0){
         // retransmission of already treated packet: nothing to do
-        if (conversation.nextDownstreamNumber()-(qint32)(packet.seqNumber()==1))
-          qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
-        else
-          qDebug() << conversation.id() << "<RR" << packet;
+        if (conversation.nextDownstreamNumber()-(qint32)(packet.seqNumber()==1)) {
+          //qDebug() << conversation.id() << "KK>" << packet; // probable keepalive
+        } else {
+          //qDebug() << conversation.id() << "<RR" << packet;
+        }
       } else {
-        qDebug() << conversation.id() << "<--" << packet;
+        //qDebug() << conversation.id() << "<--" << packet;
         //qDebug() << "  inserting downstream buffered packet" << packet;
         _downstreamBuffer.insertMulti(conversation, packet);
       }
@@ -106,7 +109,8 @@ void PcapTcpStack::dispatchPacket(PcapTcpPacket packet,
     }
   }
   if (packet.rst() || packet.fin()) {
-    qDebug() << conversation.id() << "XXX";
+    //qDebug() << conversation.id() << "XXX";
+    emit conversationFinished(conversation);
     _conversations.remove(conversation);
     if (_upstreamBuffer.values(conversation).size() != 0) { // should be useless
       qDebug() << conversation.id() << "  remaining upstream buffered packets"

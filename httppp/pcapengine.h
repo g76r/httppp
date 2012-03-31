@@ -17,6 +17,7 @@ private:
   PcapThread *_thread;
 
 public:
+  PcapEngine();
   PcapEngine(QString filename);
   void loadFile(QString filename);
   void start();
@@ -26,6 +27,7 @@ signals:
   void layer1PacketReceived(PcapLayer1Packet packet);
 
 private:
+  void init();
   void packetHandler(const struct pcap_pkthdr* pkthdr,
                      const u_char* packet);
   static void callback(u_char *user, const struct pcap_pkthdr* pkthdr,

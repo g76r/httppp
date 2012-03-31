@@ -5,12 +5,21 @@
 #include <QMetaType>
 #include "pcaplayer2packet.h"
 
-PcapEngine::PcapEngine(QString filename) : _pcap(0), _filename(filename) {
+void PcapEngine::init() {
   _thread = new PcapThread(this);
   moveToThread(_thread);
   qRegisterMetaType<PcapLayer1Packet>("PcapLayer1Packet");
   qRegisterMetaType<PcapLayer2Packet>("PcapLayer2Packet");
   connect(_thread, SIGNAL(finished()), this, SIGNAL(captureTerminated()));
+}
+
+
+PcapEngine::PcapEngine() : _pcap(0) {
+  init();
+}
+
+PcapEngine::PcapEngine(QString filename) : _pcap(0) {
+  init();
   loadFile(filename);
 }
 
@@ -29,6 +38,7 @@ void PcapEngine::loadFile(QString filename) {
     _filename = filename;
   else {
     qDebug() << "pcap_open_offline" << filename << "failed:" << errbuf;
+    _filename = QString();
   }
 }
 

@@ -31,6 +31,9 @@ signals:
   void tcpDownstreamPacket(PcapTcpPacket packet,
                            PcapTcpConversation conversation);
 
+  void conversationStarted(PcapTcpConversation conversation);
+  void conversationFinished(PcapTcpConversation conversation);
+
 public slots:
   /** Receiving IP packet, potentially retransmitted or in wrong order.
     */
