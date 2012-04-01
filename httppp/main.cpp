@@ -5,7 +5,7 @@
 #include "pcaptcpstack.h"
 #include "printer.h"
 */
-#include "httpppmainwindow.h"
+#include "gui/httpppmainwindow.h"
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);

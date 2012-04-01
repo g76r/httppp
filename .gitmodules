@@ -1,0 +1,3 @@
+[submodule "libqpcap"]
+	path = libqpcap
+	url = git@gitorious.org:libqpcap/libqpcap.git

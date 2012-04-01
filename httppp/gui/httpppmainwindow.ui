@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HttpppMainWindow</class>
+ <widget class="QMainWindow" name="HttpppMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QWidget" name="panelControls" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="pushLoad">
+         <property name="text">
+          <string>Load File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushCapture">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Start Capture</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushTcpConversations">
+         <property name="text">
+          <string>TCP Conversations</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushTcpPackets">
+         <property name="text">
+          <string>TCP Packets</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushHttpRequests">
+         <property name="text">
+          <string>HTTP Requests</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushDetails">
+         <property name="text">
+          <string>Details</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="panelPanels" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="panelTcpConversations">
+         <property name="title">
+          <string>TCP Conversations</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="EnhancedTableView" name="tcpConversationsView">
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="gridStyle">
+             <enum>Qt::DotLine</enum>
+            </property>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="panelTcpPackets">
+         <property name="title">
+          <string>TCP Packets</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="EnhancedTreeView" name="tcpPacketsView"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="panelHttpRequests">
+         <property name="title">
+          <string>HTTP Requests</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="EnhancedTreeView" name="httpRequestsView"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="panelDetails">
+         <property name="title">
+          <string>Details</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QTextBrowser" name="detailsView"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>18</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>EnhancedTreeView</class>
+   <extends>QTreeView</extends>
+   <header>widget/enhancedtreeview.h</header>
+   <slots>
+    <signal>currentIndexChanged(QModelIndex)</signal>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>EnhancedTableView</class>
+   <extends>QTableView</extends>
+   <header>widget/enhancedtableview.h</header>
+   <slots>
+    <signal>currentIndexChanged(QModelIndex)</signal>
+   </slots>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>tcpConversationsView</sender>
+   <signal>currentIndexChanged(QModelIndex)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>forwardSelection(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>85</x>
+     <y>239</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>0</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tcpPacketsView</sender>
+   <signal>currentIndexChanged(QModelIndex)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>forwardSelection(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpRequestsView</sender>
+   <signal>currentIndexChanged(QModelIndex)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>forwardSelection(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>465</x>
+     <y>367</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-71</x>
+     <y>363</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushTcpConversations</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>changePanelVisibility(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>477</x>
+     <y>34</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>467</x>
+     <y>-4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushTcpPackets</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>changePanelVisibility(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>567</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>561</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushHttpRequests</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>changePanelVisibility(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>668</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>651</x>
+     <y>-4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushDetails</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>changePanelVisibility(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>757</x>
+     <y>38</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>731</x>
+     <y>-5</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>changePanelVisibility(bool)</slot>
+  <slot>forwardSelection(QModelIndex)</slot>
+ </slots>
+</ui>
