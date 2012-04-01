@@ -21,24 +21,24 @@
               ;*/
 //}
 
-void Printer::layer1PacketReceived(PcapLayer1Packet packet) {
+void Printer::layer1PacketReceived(QPcapLayer1Packet packet) {
   qDebug() << packet;
 }
 
-void Printer::layer2PacketReceived(PcapLayer2Packet packet) {
+void Printer::layer2PacketReceived(QPcapLayer2Packet packet) {
   qDebug() << packet;
 }
 
-void Printer::layer3PacketReceived(PcapLayer3Packet packet) {
+void Printer::layer3PacketReceived(QPcapLayer3Packet packet) {
   qDebug() << packet;
 }
 
-void Printer::tcpUpstreamPacket(PcapTcpPacket packet,
-                                PcapTcpConversation conversation) {
+void Printer::tcpUpstreamPacket(QPcapTcpPacket packet,
+                                QPcapTcpConversation conversation) {
   qDebug() << conversation.id() << ">>>" << packet;
 }
 
-void Printer::tcpDownstreamPacket(PcapTcpPacket packet,
-                                  PcapTcpConversation conversation) {
+void Printer::tcpDownstreamPacket(QPcapTcpPacket packet,
+                                  QPcapTcpConversation conversation) {
   qDebug() << conversation.id() << "<<<" << packet;
 }

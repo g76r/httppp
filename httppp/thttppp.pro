@@ -1,5 +1,6 @@
 TEMPLATE = app
-TARGET = httppp
+CONFIG -= console
+TARGET = thttppp
 CONFIG += largefile
 
 QMAKE_CXXFLAGS += -Wextra
@@ -20,21 +21,8 @@ linux-g++ {
   MOC_DIR = ../httppp-build-linux/moc
 }
 
-SOURCES += gui/main.cpp \
-    gui/httpppmainwindow.cpp \
-    gui/tcpconversationmodel.cpp \
-    gui/tcppacketmodel.cpp \
-    gui/httprequestsmodel.cpp \
-    widget/enhancedtreeview.cpp \
-    widget/enhancedtableview.cpp
+SOURCES += tui/main.cpp \
+    tui/printer.cpp
 
 HEADERS += \
-    gui/httpppmainwindow.h \
-    gui/tcpconversationmodel.h \
-    gui/tcppacketmodel.h \
-    gui/httprequestsmodel.h \
-    widget/enhancedtreeview.h \
-    widget/enhancedtableview.h
-
-FORMS += \
-    gui/httpppmainwindow.ui
+    tui/printer.h
