@@ -1,4 +1,5 @@
-Makefile
+/Makefile
+/httppp/Makefile
 *.pro.user*
-*.o
 *-build*
+/httppp/httppp
