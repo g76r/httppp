@@ -3,6 +3,7 @@
 #include "qpcapethernetstack.h"
 #include "qpcapipv4stack.h"
 #include "qpcaptcpstack.h"
+#include "qpcaphttpstack.h"
 #include "printer.h"
 
 int main(int argc, char *argv[]) {
@@ -11,6 +12,7 @@ int main(int argc, char *argv[]) {
   QPcapEthernetStack ether;
   QPcapIPv4Stack ip;
   QPcapTcpStack tcp;
+  QPcapHttpStack http;
   Printer p;
   //QObject::connect(&pe, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
   //                 &p, SLOT(layer2PacketReceived(QPcapLayer1Packet)));
@@ -26,6 +28,16 @@ int main(int argc, char *argv[]) {
                    &p, SLOT(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
   QObject::connect(&tcp, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
                    &p, SLOT(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+  QObject::connect(&tcp, SIGNAL(conversationStarted(QPcapTcpConversation)),
+                    &http, SLOT(conversationStarted(QPcapTcpConversation)));
+  QObject::connect(&tcp, SIGNAL(conversationFinished(QPcapTcpConversation)),
+                    &http, SLOT(conversationFinished(QPcapTcpConversation)));
+  QObject::connect(&tcp, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
+                    &http, SLOT(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+  QObject::connect(&tcp, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
+                    &http, SLOT(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+  QObject::connect(&http, SIGNAL(httpHit(QPcapTcpConversation,QPcapHttpHit)),
+                   &p, SLOT(httpHit(QPcapTcpConversation,QPcapHttpHit)));
   // the following quit condition would not work if stacks become multithreaded
   QObject::connect(&pe, SIGNAL(captureTerminated()), &a, SLOT(quit()));
   pe.start();

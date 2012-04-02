@@ -35,10 +35,14 @@ void Printer::layer3PacketReceived(QPcapLayer3Packet packet) {
 
 void Printer::tcpUpstreamPacket(QPcapTcpPacket packet,
                                 QPcapTcpConversation conversation) {
-  qDebug() << conversation.id() << ">>>" << packet;
+  qDebug() << conversation.id() << (packet.isEmpty() ? "-->" : ">>>") << packet;
 }
 
 void Printer::tcpDownstreamPacket(QPcapTcpPacket packet,
                                   QPcapTcpConversation conversation) {
-  qDebug() << conversation.id() << "<<<" << packet;
+  qDebug() << conversation.id() << (packet.isEmpty() ? "<--" : "<<<") << packet;
+}
+
+void Printer::httpHit(QPcapTcpConversation conversation, QPcapHttpHit hit) {
+  qDebug() << conversation.id() << "HIT" << hit;
 }

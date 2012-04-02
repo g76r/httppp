@@ -7,6 +7,7 @@
 #include "qpcaplayer3packet.h"
 #include "qpcaptcppacket.h"
 #include "qpcaptcpconversation.h"
+#include "qpcaphttphit.h"
 
 class Printer : public QObject {
   Q_OBJECT
@@ -21,6 +22,7 @@ public slots:
                          QPcapTcpConversation conversation);
   void tcpDownstreamPacket(QPcapTcpPacket packet,
                            QPcapTcpConversation conversation);
+  void httpHit(QPcapTcpConversation conversation, QPcapHttpHit hit);
 
 private:
   Q_DISABLE_COPY(Printer)
