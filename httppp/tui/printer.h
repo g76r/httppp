@@ -8,11 +8,19 @@
 #include "qpcaptcppacket.h"
 #include "qpcaptcpconversation.h"
 #include "qpcaphttphit.h"
+#include <QFile>
 
 class Printer : public QObject {
   Q_OBJECT
+private:
+  QFile _stdout;
+  bool _hitCsvHeaderPrinted;
+
 public:
-  inline explicit Printer(QObject *parent = 0) : QObject(parent) { }
+  inline explicit Printer(QObject *parent = 0) : QObject(parent),
+    _hitCsvHeaderPrinted(false) {
+    _stdout.open(1, QIODevice::WriteOnly);
+  }
   
 public slots:
   void layer1PacketReceived(QPcapLayer1Packet packet);
@@ -23,6 +31,7 @@ public slots:
   void tcpDownstreamPacket(QPcapTcpPacket packet,
                            QPcapTcpConversation conversation);
   void httpHit(QPcapTcpConversation conversation, QPcapHttpHit hit);
+  void httpHitToCsv(QPcapTcpConversation conversation, QPcapHttpHit hit);
 
 private:
   Q_DISABLE_COPY(Printer)

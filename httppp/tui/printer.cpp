@@ -46,3 +46,12 @@ void Printer::tcpDownstreamPacket(QPcapTcpPacket packet,
 void Printer::httpHit(QPcapTcpConversation conversation, QPcapHttpHit hit) {
   qDebug() << conversation.id() << "HIT" << hit;
 }
+
+void Printer::httpHitToCsv(QPcapTcpConversation conversation, QPcapHttpHit hit) {
+  Q_UNUSED(conversation);
+  if (!_hitCsvHeaderPrinted) {
+    hit.writeCsvHeader(&_stdout);
+    _hitCsvHeaderPrinted = true;
+  }
+  hit.writeCsv(&_stdout);
+}

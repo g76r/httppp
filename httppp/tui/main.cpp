@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
                     &http, SLOT(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
   QObject::connect(&http, SIGNAL(httpHit(QPcapTcpConversation,QPcapHttpHit)),
                    &p, SLOT(httpHit(QPcapTcpConversation,QPcapHttpHit)));
+  QObject::connect(&http, SIGNAL(httpHit(QPcapTcpConversation,QPcapHttpHit)),
+                   &p, SLOT(httpHitToCsv(QPcapTcpConversation,QPcapHttpHit)));
   // the following quit condition would not work if stacks become multithreaded
   QObject::connect(&pe, SIGNAL(captureTerminated()), &a, SLOT(quit()));
   pe.start();
