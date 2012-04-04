@@ -15,14 +15,18 @@ void CsvWriter::write(QAbstractItemModel &model, QString filename) {
   for (int i = 0; i < columns; ++i) {
     if (i)
       file.write(";");
-    file.write(model.headerData(i, Qt::Horizontal).toString().toUtf8());
+    QString s(model.headerData(i, Qt::Horizontal).toString());
+    s.replace(";", ":");
+    file.write(s.toUtf8());
   }
   file.write("\n");
   for (int i = 0; i < rows; ++i) {
     for (int j = 0; j < columns; ++j) {
       if (j)
         file.write(";");
-      file.write(model.data(model.index(i, j)).toString().toUtf8());
+      QString s(model.data(model.index(i, j)).toString());
+      s.replace(";", ":");
+      file.write(s.toUtf8());
     }
     file.write("\n");
   }
