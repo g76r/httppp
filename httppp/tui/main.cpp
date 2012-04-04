@@ -46,10 +46,10 @@ int main(int argc, char *argv[]) {
           &tcp, SLOT(discardDownstreamBuffer(QPcapTcpConversation)));
   connect(&http, SIGNAL(discardUpstreamBuffer(QPcapTcpConversation)),
           &tcp, SLOT(discardUpstreamBuffer(QPcapTcpConversation)));
-  connect(&http, SIGNAL(httpHit(QPcapTcpConversation,QPcapHttpHit)),
-          &p, SLOT(httpHit(QPcapTcpConversation,QPcapHttpHit)));
-  connect(&http, SIGNAL(httpHit(QPcapTcpConversation,QPcapHttpHit)),
-          &p, SLOT(httpHitToCsv(QPcapTcpConversation,QPcapHttpHit)));
+  connect(&http, SIGNAL(httpHit(QPcapHttpHit)),
+          &p, SLOT(httpHit(QPcapHttpHit)));
+  connect(&http, SIGNAL(httpHit(QPcapHttpHit)),
+          &p, SLOT(httpHitToCsv(QPcapHttpHit)));
   // the following quit condition would not work if stacks become multithreaded
   connect(&pe, SIGNAL(captureTerminated()), &a, SLOT(quit()));
   pe.start();

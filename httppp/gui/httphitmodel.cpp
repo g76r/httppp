@@ -41,7 +41,7 @@ QVariant HttpHitModel::data(const QModelIndex &index, int role) const {
     case 0:
       return _list.at(index.row()).conversation().id();
     case 1:
-      return _list.at(index.row()).method();
+      return _list.at(index.row()).methodAsString();
     case 2:
       return _list.at(index.row()).host();
     case 3:

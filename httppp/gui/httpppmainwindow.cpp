@@ -1,6 +1,7 @@
 #include "httpppmainwindow.h"
 #include "ui_httpppmainwindow.h"
 #include <QFileDialog>
+#include "util/csvwriter.h"
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
@@ -153,5 +154,14 @@ void HttpppMainWindow::loadFileDialog() {
 }
 
 void HttpppMainWindow::startCaptureDialog() {
+  // LATER
+}
 
+void HttpppMainWindow::httpHitsToCsvDialog() {
+  QString filename;
+  filename = QFileDialog ::getSaveFileName(window(), tr("Save CSV File"),
+                                           "", tr("CSV files (*)"), 0);
+  if (filename.size()) {
+    CsvWriter::write(_httpHitModel, filename);
+  }
 }

@@ -26,7 +26,8 @@ SOURCES += gui/main.cpp \
     gui/tcppacketmodel.cpp \
     widget/enhancedtreeview.cpp \
     widget/enhancedtableview.cpp \
-    gui/httphitmodel.cpp
+    gui/httphitmodel.cpp \
+    util/csvwriter.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
@@ -34,7 +35,8 @@ HEADERS += \
     gui/tcppacketmodel.h \
     widget/enhancedtreeview.h \
     widget/enhancedtableview.h \
-    gui/httphitmodel.h
+    gui/httphitmodel.h \
+    util/csvwriter.h
 
 FORMS += \
     gui/httpppmainwindow.ui

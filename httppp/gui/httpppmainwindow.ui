@@ -39,6 +39,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>HTTP Hits to CSV</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -399,11 +406,28 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>httpHitsToCsvDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>231</x>
+     <y>39</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>222</x>
+     <y>-5</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>changePanelVisibility(bool)</slot>
   <slot>forwardSelection(QModelIndex)</slot>
   <slot>loadFileDialog()</slot>
   <slot>startCaptureDialog()</slot>
+  <slot>httpHitsToCsvDialog()</slot>
  </slots>
 </ui>

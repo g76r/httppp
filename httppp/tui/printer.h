@@ -30,8 +30,8 @@ public slots:
                          QPcapTcpConversation conversation);
   void tcpDownstreamPacket(QPcapTcpPacket packet,
                            QPcapTcpConversation conversation);
-  void httpHit(QPcapTcpConversation conversation, QPcapHttpHit hit);
-  void httpHitToCsv(QPcapTcpConversation conversation, QPcapHttpHit hit);
+  void httpHit(QPcapHttpHit hit);
+  void httpHitToCsv(QPcapHttpHit hit);
 
 private:
   Q_DISABLE_COPY(Printer)

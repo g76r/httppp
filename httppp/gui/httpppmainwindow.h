@@ -40,6 +40,7 @@ private slots:
 public slots:
   void loadFileDialog();
   void startCaptureDialog();
+  void httpHitsToCsvDialog();
 
 private:
   void selectConversationInConversations(QPcapTcpConversation conversation);
