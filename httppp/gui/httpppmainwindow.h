@@ -6,8 +6,10 @@
 #include "qpcapethernetstack.h"
 #include "qpcapipv4stack.h"
 #include "qpcaptcpstack.h"
+#include "qpcaphttpstack.h"
 #include "tcpconversationmodel.h"
 #include "tcppacketmodel.h"
+#include "httphitmodel.h"
 
 namespace Ui {
 class HttpppMainWindow;
@@ -21,9 +23,10 @@ private:
   QPcapEthernetStack _etherStack;
   QPcapIPv4Stack _ipStack;
   QPcapTcpStack _tcpStack;
-  //Printer p;
+  QPcapHttpStack _httpStack;
   TcpConversationModel _tcpConversationModel;
-  TcpPacketModel _tcpPacketsModel;
+  TcpPacketModel _tcpPacketModel;
+  HttpHitModel _httpHitModel;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
@@ -32,7 +35,7 @@ public:
 
 private slots:
   void changePanelVisibility(bool visible);
-  void forwardSelection(QModelIndex activated);
+  void forwardSelection(QModelIndex currentIndex);
 
 public slots:
   void loadFileDialog();
@@ -41,6 +44,7 @@ public slots:
 private:
   void selectConversationInConversations(QPcapTcpConversation conversation);
   void selectConversationInPackets(QPcapTcpConversation conversation);
+  void selectPacketInPackets(QPcapTcpPacket packet);
   void showDetails(QPcapTcpConversation conversation);
   void showDetails(QPcapTcpPacket packet);
 };

@@ -78,9 +78,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushHttpRequests">
+        <widget class="QPushButton" name="pushHttpHits">
          <property name="text">
-          <string>HTTP Requests</string>
+          <string>HTTP Hits</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -126,6 +126,15 @@
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
            <widget class="EnhancedTableView" name="tcpConversationsView">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
             <property name="selectionMode">
              <enum>QAbstractItemView::SingleSelection</enum>
             </property>
@@ -150,19 +159,42 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="EnhancedTreeView" name="tcpPacketsView"/>
+           <widget class="EnhancedTreeView" name="tcpPacketsView">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="panelHttpRequests">
+        <widget class="QGroupBox" name="panelHttpHits">
          <property name="title">
-          <string>HTTP Requests</string>
+          <string>HTTP Hits</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="EnhancedTreeView" name="httpRequestsView"/>
+           <widget class="EnhancedTableView" name="httpHitsView">
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="gridStyle">
+             <enum>Qt::DotLine</enum>
+            </property>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -174,7 +206,14 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QTextBrowser" name="detailsView"/>
+           <widget class="QTextBrowser" name="detailsView">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -249,22 +288,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>httpRequestsView</sender>
-   <signal>currentIndexChanged(QModelIndex)</signal>
-   <receiver>HttpppMainWindow</receiver>
-   <slot>forwardSelection(QModelIndex)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>465</x>
-     <y>367</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-71</x>
-     <y>363</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pushTcpConversations</sender>
    <signal>toggled(bool)</signal>
    <receiver>HttpppMainWindow</receiver>
@@ -297,7 +320,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushHttpRequests</sender>
+   <sender>pushHttpHits</sender>
    <signal>toggled(bool)</signal>
    <receiver>HttpppMainWindow</receiver>
    <slot>changePanelVisibility(bool)</slot>
@@ -357,6 +380,22 @@
     <hint type="destinationlabel">
      <x>1</x>
      <y>84</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpHitsView</sender>
+   <signal>currentIndexChanged(QModelIndex)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>forwardSelection(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>474</x>
+     <y>381</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>0</x>
+     <y>367</y>
     </hint>
    </hints>
   </connection>

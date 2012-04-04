@@ -1,11 +1,13 @@
 #include "httpppmainwindow.h"
 #include "ui_httpppmainwindow.h"
+#include <QFileDialog>
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
   ui->setupUi(this);
   ui->tcpConversationsView->setModel(&_tcpConversationModel);
-  ui->tcpPacketsView->setModel(&_tcpPacketsModel);
+  ui->tcpPacketsView->setModel(&_tcpPacketModel);
+  ui->httpHitsView->setModel(&_httpHitModel);
   connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
                    &_etherStack, SLOT(layer1PacketReceived(QPcapLayer1Packet)));
   connect(&_etherStack, SIGNAL(layer2PacketReceived(QPcapLayer2Packet)),
@@ -15,15 +17,19 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   connect(&_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
           &_tcpConversationModel, SLOT(addConversation(QPcapTcpConversation)));
   connect(&_tcpStack, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
-          &_tcpPacketsModel, SLOT(addTcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+          &_tcpPacketModel, SLOT(addTcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
   connect(&_tcpStack, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
-          &_tcpPacketsModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+          &_tcpPacketModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
+  _httpStack.connectToLowerStack(_tcpStack);
+  connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
+          &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
   QPcapTcpConversation::resetConversationCounter();
   _tcpConversationModel.clear();
-  _tcpPacketsModel.clear();
+  _tcpPacketModel.clear();
+  _httpHitModel.clear();
   _tcpStack.reset();
   _pcapEngine.loadFile(filename);
   _pcapEngine.start();
@@ -38,32 +44,34 @@ void HttpppMainWindow::changePanelVisibility(bool visible) {
     ui->panelTcpConversations->setVisible(visible);
   } else if (sender() == ui->pushTcpPackets) {
     ui->panelTcpPackets->setVisible(visible);
-  } else if (sender() == ui->pushHttpRequests) {
-    ui->panelHttpRequests->setVisible(visible);
+  } else if (sender() == ui->pushHttpHits) {
+    ui->panelHttpHits->setVisible(visible);
   } else if (sender() == ui->pushDetails) {
     ui->panelDetails->setVisible(visible);
   }
 }
 
-void HttpppMainWindow::forwardSelection(QModelIndex activated) {
+void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
   if (sender() == ui->tcpConversationsView) {
     //qDebug() << "forwardSelection from TCP conv";
-    QPcapTcpConversation c = _tcpConversationModel.conversation(activated);
+    QPcapTcpConversation c = _tcpConversationModel.conversation(currentIndex);
     selectConversationInPackets(c);
     showDetails(c);
   } else if (sender() == ui->tcpPacketsView) {
     //qDebug() << "forwardSelection from TCP packets";
-    QPcapTcpPacket p = _tcpPacketsModel.packet(activated);
-    QPcapTcpConversation c = _tcpPacketsModel.conversation(activated);
+    QPcapTcpPacket p = _tcpPacketModel.packet(currentIndex);
+    QPcapTcpConversation c = _tcpPacketModel.conversation(currentIndex);
     selectConversationInConversations(c);
     //qDebug() << "sender = tcpPacketView" << p.isNull() << p << c;
     if (p.isNull())
       showDetails(c);
     else
       showDetails(p);
-  } else if (sender() == ui->httpRequestsView) {
-    //qDebug() << "forwardSelection from HTTP requests";
-    // TODO
+  } else if (sender() == ui->httpHitsView) {
+    QPcapHttpHit hit = _httpHitModel.hit(currentIndex);
+    selectConversationInConversations(hit.conversation());
+    selectPacketInPackets(hit.firstRequestPacket());
+    showDetails(hit.firstRequestPacket()); // LATER do something better
   } else {
     //qDebug() << "forwardSelection from nowhere";
   }
@@ -73,6 +81,8 @@ void HttpppMainWindow::selectConversationInConversations(
     QPcapTcpConversation conversation) {
   if (ui->tcpConversationsView->isVisible()) {
     int r = _tcpConversationModel.row(conversation);
+    QModelIndex i = _tcpConversationModel.index(r, 0, QModelIndex());
+    ui->tcpConversationsView->scrollTo(i);
     if (r >= 0)
       ui->tcpConversationsView->selectRow(r);
   }
@@ -80,8 +90,25 @@ void HttpppMainWindow::selectConversationInConversations(
 
 void HttpppMainWindow::selectConversationInPackets(
     QPcapTcpConversation conversation) {
-  if (ui->tcpPacketsView->isVisible()) {    
-    QModelIndex i = _tcpPacketsModel.index(conversation);
+  if (ui->tcpPacketsView->isVisible()) {
+    QModelIndex i = _tcpPacketModel.index(conversation);
+    ui->tcpPacketsView->scrollTo(i);
+    QItemSelectionModel *sm = ui->tcpPacketsView->selectionModel();
+    if (sm) {
+      QModelIndexList mil = sm->selectedIndexes();
+      if (!mil.contains(i)) {
+        sm->select(i, QItemSelectionModel::Clear | QItemSelectionModel::Select
+                   | QItemSelectionModel::Current);
+      }
+    }
+  }
+}
+
+void HttpppMainWindow::selectPacketInPackets(QPcapTcpPacket packet) {
+  if (ui->tcpPacketsView->isVisible()) {
+    QModelIndex i = _tcpPacketModel.index(packet);
+    ui->tcpPacketsView->setExpanded(_tcpPacketModel.parent(i), true);
+    ui->tcpPacketsView->scrollTo(i);
     QItemSelectionModel *sm = ui->tcpPacketsView->selectionModel();
     if (sm) {
       QModelIndexList mil = sm->selectedIndexes();
@@ -116,7 +143,6 @@ void HttpppMainWindow::showDetails(QPcapTcpPacket packet) {
   }
 }
 
-#include <QFileDialog>
 void HttpppMainWindow::loadFileDialog() {
   QString filename;
   filename = QFileDialog ::getOpenFileName(window(), tr("Load Capture File"),

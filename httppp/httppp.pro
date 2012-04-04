@@ -24,17 +24,17 @@ SOURCES += gui/main.cpp \
     gui/httpppmainwindow.cpp \
     gui/tcpconversationmodel.cpp \
     gui/tcppacketmodel.cpp \
-    gui/httprequestsmodel.cpp \
     widget/enhancedtreeview.cpp \
-    widget/enhancedtableview.cpp
+    widget/enhancedtableview.cpp \
+    gui/httphitmodel.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
     gui/tcpconversationmodel.h \
     gui/tcppacketmodel.h \
-    gui/httprequestsmodel.h \
     widget/enhancedtreeview.h \
-    widget/enhancedtableview.h
+    widget/enhancedtableview.h \
+    gui/httphitmodel.h
 
 FORMS += \
     gui/httpppmainwindow.ui

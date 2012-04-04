@@ -15,7 +15,7 @@ void TcpConversationModel::addConversation(QPcapTcpConversation conversation) {
 void TcpConversationModel::setConversationFinished(
     QPcapTcpConversation conversation) {
   Q_UNUSED(conversation);
-  // FIXME
+  // TODO
 }
 
 QModelIndex TcpConversationModel::index(int row, int column,

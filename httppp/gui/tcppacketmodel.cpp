@@ -134,6 +134,19 @@ QModelIndex TcpPacketModel::index(QPcapTcpConversation conversation) const {
   return QModelIndex();
 }
 
+QModelIndex TcpPacketModel::index(QPcapTcpPacket packet) const {
+  // LATER optimize
+  for (int i = 0; i < _root->_children.size(); ++i) {
+    TreeItem *ti = _root->_children.at(i);
+    for (int j = 0; j < ti->_children.size(); ++j) {
+      TreeItem *tj = ti->_children.at(j);
+      if (tj && tj->_packet == packet)
+        return createIndex(j, 0, tj);
+    }
+  }
+  return QModelIndex();
+}
+
 QPcapTcpPacket TcpPacketModel::packet(const QModelIndex &index) const {
   if (!index.isValid())
     return QPcapTcpPacket();

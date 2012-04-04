@@ -23,8 +23,6 @@ public:
   int row(QPcapTcpConversation conversation) const;
   void clear();
 
-signals:
-  
 public slots:
   void addConversation(QPcapTcpConversation conversation);
   void setConversationFinished(QPcapTcpConversation conversation);
