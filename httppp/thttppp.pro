@@ -4,7 +4,7 @@ TARGET = thttppp
 CONFIG += largefile
 
 QMAKE_CXXFLAGS += -Wextra
-#QMAKE_RPATHDIR = # no rpath in linking
+win32:QMAKE_RPATHDIR = # no rpath in linking
 
 INCLUDEPATH += ../libqpcap
 win32:LIBS += c:/WpdPack/Lib/wpcap.lib
