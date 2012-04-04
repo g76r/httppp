@@ -10,6 +10,7 @@
 #include "tcpconversationmodel.h"
 #include "tcppacketmodel.h"
 #include "httphitmodel.h"
+#include <QSortFilterProxyModel>
 
 namespace Ui {
 class HttpppMainWindow;
@@ -27,6 +28,7 @@ private:
   TcpConversationModel _tcpConversationModel;
   TcpPacketModel _tcpPacketModel;
   HttpHitModel _httpHitModel;
+  QSortFilterProxyModel  _httpHitProxyModel;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);

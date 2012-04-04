@@ -8,7 +8,8 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->setupUi(this);
   ui->tcpConversationsView->setModel(&_tcpConversationModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
-  ui->httpHitsView->setModel(&_httpHitModel);
+  _httpHitProxyModel.setSourceModel(&_httpHitModel);
+  ui->httpHitsView->setModel(&_httpHitProxyModel);
   connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
                    &_etherStack, SLOT(layer1PacketReceived(QPcapLayer1Packet)));
   connect(&_etherStack, SIGNAL(layer2PacketReceived(QPcapLayer2Packet)),
