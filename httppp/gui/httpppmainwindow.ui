@@ -328,9 +328,43 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushLoad</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>loadFileDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>52</x>
+     <y>38</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-6</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushCapture</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>startCaptureDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>48</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>84</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>changePanelVisibility(bool)</slot>
   <slot>forwardSelection(QModelIndex)</slot>
+  <slot>loadFileDialog()</slot>
+  <slot>startCaptureDialog()</slot>
  </slots>
 </ui>

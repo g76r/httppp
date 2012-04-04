@@ -8,7 +8,8 @@ class HttpRequestsModel : public QAbstractItemModel
   Q_OBJECT
 public:
   explicit HttpRequestsModel(QObject *parent = 0);
-  
+  void clear();
+
 signals:
   
 public slots:

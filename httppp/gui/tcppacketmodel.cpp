@@ -152,3 +152,13 @@ QPcapTcpConversation TcpPacketModel::conversation(
     return QPcapTcpConversation();
   return item->_conversation;
 }
+
+void TcpPacketModel::clear() {
+  emit beginResetModel();
+  //emit beginRemoveRows(QModelIndex(), 0, _root->_children.size()-1);
+  //_root->_children.clear();
+  delete _root;
+  _root = new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true);
+  //emit endRemoveRows();
+  emit endResetModel();
+}

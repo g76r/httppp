@@ -20,7 +20,11 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
           &_tcpPacketsModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
 }
 
-void HttpppMainWindow::loadFilename(QString filename) {
+void HttpppMainWindow::loadFile(QString filename) {
+  QPcapTcpConversation::resetConversationCounter();
+  _tcpConversationModel.clear();
+  _tcpPacketsModel.clear();
+  _tcpStack.reset();
   _pcapEngine.loadFile(filename);
   _pcapEngine.start();
 }
@@ -110,4 +114,18 @@ void HttpppMainWindow::showDetails(QPcapTcpPacket packet) {
     ui->detailsView->setHtml(QString("<p>%1<p>%2").arg(packet.english())
                              .arg(packet.payload().constData())); // TODO escape
   }
+}
+
+#include <QFileDialog>
+void HttpppMainWindow::loadFileDialog() {
+  QString filename;
+  filename = QFileDialog ::getOpenFileName(window(), tr("Load Capture File"),
+                                           "", tr("Capture files (*)"), 0);
+  if (filename.size()) {
+    loadFile(filename);
+  }
+}
+
+void HttpppMainWindow::startCaptureDialog() {
+
 }

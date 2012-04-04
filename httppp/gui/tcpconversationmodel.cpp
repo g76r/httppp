@@ -27,10 +27,10 @@ QModelIndex TcpConversationModel::index(int row, int column,
 }
 
 int TcpConversationModel::row(QPcapTcpConversation conversation) const {
-  for (int i = 0; i < _list.size(); ++i) {
-    QPcapTcpConversation c = _list.at(i);
+  for (int row = 0; row < _list.size(); ++row) {
+    QPcapTcpConversation c = _list.at(row);
     if (c == conversation)
-      return i;
+      return row;
   }
   return -1;
 }
@@ -120,4 +120,10 @@ QVariant TcpConversationModel::headerData(
     ;
   }
   return QVariant();
+}
+
+void TcpConversationModel::clear() {
+  emit beginRemoveRows(QModelIndex(), 0, _list.size()-1);
+  _list.clear();
+  emit endRemoveRows();
 }

@@ -27,12 +27,16 @@ private:
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
-  void loadFilename(QString filename);
+  void loadFile(QString filename);
   ~HttpppMainWindow();
 
 private slots:
   void changePanelVisibility(bool visible);
   void forwardSelection(QModelIndex activated);
+
+public slots:
+  void loadFileDialog();
+  void startCaptureDialog();
 
 private:
   void selectConversationInConversations(QPcapTcpConversation conversation);

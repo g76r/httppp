@@ -56,6 +56,7 @@ public:
     * pointed by index belong to.
     */
   QPcapTcpConversation conversation(const QModelIndex &index) const;
+  void clear();
 
 signals:
   

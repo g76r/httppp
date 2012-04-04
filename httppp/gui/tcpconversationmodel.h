@@ -21,6 +21,7 @@ public:
   QPcapTcpConversation conversation(const QModelIndex &index) const;
   //QModelIndex index(PcapTcpConversation conversation) const;
   int row(QPcapTcpConversation conversation) const;
+  void clear();
 
 signals:
   
