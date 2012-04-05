@@ -28,7 +28,7 @@ private:
   TcpConversationModel _tcpConversationModel;
   TcpPacketModel _tcpPacketModel;
   HttpHitModel _httpHitModel;
-  QSortFilterProxyModel  _httpHitProxyModel;
+  QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);

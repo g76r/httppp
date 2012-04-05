@@ -1,6 +1,6 @@
 #include "tcpconversationmodel.h"
 
-#define COLUMNS 5
+#define COLUMNS 3
 
 TcpConversationModel::TcpConversationModel(QObject *parent)
   : QAbstractItemModel(parent) {
@@ -26,23 +26,15 @@ QModelIndex TcpConversationModel::index(int row, int column,
   return createIndex(row, column, _list.at(row).id());
 }
 
-int TcpConversationModel::row(QPcapTcpConversation conversation) const {
-  for (int row = 0; row < _list.size(); ++row) {
-    QPcapTcpConversation c = _list.at(row);
-    if (c == conversation)
-      return row;
-  }
-  return -1;
-}
-
-/*QModelIndex TcpConversationModel::index(PcapTcpConversation
+QModelIndex TcpConversationModel::index(QPcapTcpConversation
                                         conversation) const {
   for (int i = 0; i < _list.size(); ++i) {
-    PcapTcpConversation c = _list.at(i);
+    const QPcapTcpConversation &c = _list.at(i);
     if (c == conversation)
       return createIndex(i, 0, c.id());
   }
-}*/
+  return QModelIndex();
+}
 
 QPcapTcpConversation TcpConversationModel::conversation(
     const QModelIndex &index) const {
@@ -82,11 +74,7 @@ QVariant TcpConversationModel::data(const QModelIndex &index, int role) const {
     case 1:
       return _list.at(index.row()).firstPacket().src();
     case 2:
-      return _list.at(index.row()).firstPacket().srcPort();
-    case 3:
       return _list.at(index.row()).firstPacket().dst();
-    case 4:
-      return _list.at(index.row()).firstPacket().srcPort();
     }
   }
   default:
@@ -107,13 +95,9 @@ QVariant TcpConversationModel::headerData(
     case 0:
       return tr("Id");
     case 1:
-      return tr("Source Host");
+      return tr("Source");
     case 2:
-      return tr("Source Port");
-    case 3:
-      return tr("Destination Host");
-    case 4:
-      return tr("Destination Port");
+      return tr("Destination");
     }
   }
   default:

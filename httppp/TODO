@@ -1,14 +1,4 @@
-tester/finir la couche TCP
-coder la couche HTTP
-faire une GUI minimaliste mais avec plusieurs vues et plusieurs modèles
-  modèles: liste connexions, avec infos agrégées (#paquets, MTBFB, etc.)
-           arbre connexion-paquet_tcp
-           arbre connexion-requête_http
-  vues: tableau connexions + agrégats
-        arbre connexion-paquet
-        arbre connexion-requête
-        texte de visualisation (flux tcp à la wireshark, contenu du paquet,
-          flux restreint à une requête)
-  contrôles au dessus pour afficher-cacher les 4 vues indépendamment et charger
-    un fichier ou lancer une capture
+améliorer la vue détail
+créer une vue agrégats?
+compiler sur mac
 permettre de lancer une capture live plutôt que de lire un fichier

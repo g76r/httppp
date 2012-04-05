@@ -6,7 +6,8 @@
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
   ui->setupUi(this);
-  ui->tcpConversationsView->setModel(&_tcpConversationModel);
+  _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
+  ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
   _httpHitProxyModel.setSourceModel(&_httpHitModel);
   ui->httpHitsView->setModel(&_httpHitProxyModel);
@@ -56,7 +57,8 @@ void HttpppMainWindow::changePanelVisibility(bool visible) {
 void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
   if (sender() == ui->tcpConversationsView) {
     //qDebug() << "forwardSelection from TCP conv";
-    QPcapTcpConversation c = _tcpConversationModel.conversation(currentIndex);
+    QPcapTcpConversation c = _tcpConversationModel.conversation(
+          _tcpConversationProxyModel.mapToSource(currentIndex));
     selectConversationInPackets(c);
     showDetails(c);
   } else if (sender() == ui->tcpPacketsView) {
@@ -70,7 +72,8 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
     else
       showDetails(p);
   } else if (sender() == ui->httpHitsView) {
-    QPcapHttpHit hit = _httpHitModel.hit(currentIndex);
+    QPcapHttpHit hit = _httpHitModel.hit(
+          _httpHitProxyModel.mapToSource(currentIndex));
     selectConversationInConversations(hit.conversation());
     selectPacketInPackets(hit.firstRequestPacket());
     showDetails(hit.firstRequestPacket()); // LATER do something better
@@ -82,11 +85,13 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
 void HttpppMainWindow::selectConversationInConversations(
     QPcapTcpConversation conversation) {
   if (ui->tcpConversationsView->isVisible()) {
-    int r = _tcpConversationModel.row(conversation);
-    QModelIndex i = _tcpConversationModel.index(r, 0, QModelIndex());
-    ui->tcpConversationsView->scrollTo(i);
-    if (r >= 0)
-      ui->tcpConversationsView->selectRow(r);
+    QModelIndex i = _tcpConversationModel.index(conversation);
+    if (i.isValid()) {
+      ui->tcpConversationsView->scrollTo(
+            _tcpConversationProxyModel.mapFromSource(i));
+      ui->tcpConversationsView->selectRow(
+            _tcpConversationProxyModel.mapFromSource(i).row());
+    }
   }
 }
 
@@ -123,11 +128,8 @@ void HttpppMainWindow::selectPacketInPackets(QPcapTcpPacket packet) {
 }
 
 void HttpppMainWindow::showDetails(QPcapTcpConversation conversation) {
-  //qDebug() << "show details" << ui->detailsView->isVisible() << conversation
-  //         << conversation.packets().size();
   if (ui->detailsView->isVisible()) {
     QString text;
-    //ui->detailsView->clear();
     foreach (QPcapTcpPacket p, conversation.packets()) {
       bool upstream = conversation.matchesSameStream(p);
       text.append(QString("<p><font color=%1>%2")
