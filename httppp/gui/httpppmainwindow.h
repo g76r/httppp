@@ -49,7 +49,7 @@ private:
   void selectConversationInPackets(QPcapTcpConversation conversation);
   void selectPacketInPackets(QPcapTcpPacket packet);
   void showDetails(QPcapTcpConversation conversation);
-  void showDetails(QPcapTcpPacket packet);
+  void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet);
 };
 
 #endif // HTTPPPMAINWINDOW_H

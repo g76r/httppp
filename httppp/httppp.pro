@@ -27,7 +27,8 @@ SOURCES += gui/main.cpp \
     widget/enhancedtreeview.cpp \
     widget/enhancedtableview.cpp \
     gui/httphitmodel.cpp \
-    util/csvwriter.cpp
+    util/csvwriter.cpp \
+    widget/multipixmapbutton.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
@@ -36,7 +37,11 @@ HEADERS += \
     widget/enhancedtreeview.h \
     widget/enhancedtableview.h \
     gui/httphitmodel.h \
-    util/csvwriter.h
+    util/csvwriter.h \
+    widget/multipixmapbutton.h
 
 FORMS += \
     gui/httpppmainwindow.ui
+
+RESOURCES += \
+    icons.qrc

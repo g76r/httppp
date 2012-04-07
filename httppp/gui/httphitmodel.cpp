@@ -1,7 +1,7 @@
 #include "httphitmodel.h"
 #include <QDateTime>
 
-#define COLUMNS 17
+#define COLUMNS 21
 
 HttpHitModel::HttpHitModel(QObject *parent) : QAbstractItemModel(parent) {
 }
@@ -76,6 +76,14 @@ QVariant HttpHitModel::data(const QModelIndex &index, int role) const {
       return _list.at(index.row()).usecToFirstByte();
     case 16:
       return _list.at(index.row()).usecToLastByte();
+    case 17:
+      return _list.at(index.row()).returnCode();
+    case 18:
+      return _list.at(index.row()).customField(0);
+    case 19:
+      return _list.at(index.row()).customField(1);
+    case 20:
+      return _list.at(index.row()).customField(2);
     }
   }
   default:
@@ -125,6 +133,14 @@ QVariant HttpHitModel::headerData(int section, Qt::Orientation orientation,
       return tr("TTFB");
     case 16:
       return tr("TTLB");
+    case 17:
+      return tr("Return Code");
+    case 18:
+      return tr("Field 1");
+    case 19:
+      return tr("Field 2");
+    case 20:
+      return tr("Field 3");
     }
   }
   default:
@@ -146,7 +162,7 @@ void HttpHitModel::clear() {
 }
 
 void HttpHitModel::addHit(QPcapHttpHit hit) {
-  qDebug() << "addHit" << hit.conversation().id();
+  //qDebug() << "addHit" << hit.conversation().id();
   emit beginInsertRows(QModelIndex(), _list.size(), _list.size());
   _list.append(hit);
   emit endInsertRows();

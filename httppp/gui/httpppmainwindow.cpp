@@ -6,6 +6,15 @@
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
   ui->setupUi(this);
+  ui->switchField1->appendPixmap(":/icons/up.svg");
+  ui->switchField1->appendPixmap(":/icons/down.svg");
+  ui->switchField1->appendPixmap(":/icons/updown.svg");
+  ui->switchField2->appendPixmap(":/icons/up.svg");
+  ui->switchField2->appendPixmap(":/icons/down.svg");
+  ui->switchField2->appendPixmap(":/icons/updown.svg");
+  ui->switchField3->appendPixmap(":/icons/up.svg");
+  ui->switchField3->appendPixmap(":/icons/down.svg");
+  ui->switchField3->appendPixmap(":/icons/updown.svg");
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
@@ -34,6 +43,19 @@ void HttpppMainWindow::loadFile(QString filename) {
   _tcpPacketModel.clear();
   _httpHitModel.clear();
   _tcpStack.reset();
+  _httpStack.clearFilters();
+  if (!ui->comboField1->currentText().isEmpty())
+    _httpStack.addFilter(
+          ui->comboField1->currentText(),
+          (QPcapHttpStack::QPcapHttpDirection)ui->switchField1->currentIndex());
+  if (!ui->comboField2->currentText().isEmpty())
+    _httpStack.addFilter(
+          ui->comboField2->currentText(),
+          (QPcapHttpStack::QPcapHttpDirection)ui->switchField2->currentIndex());
+  if (!ui->comboField3->currentText().isEmpty())
+    _httpStack.addFilter(
+          ui->comboField3->currentText(),
+          (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
   _pcapEngine.loadFile(filename);
   _pcapEngine.start();
 }
@@ -70,13 +92,13 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
     if (p.isNull())
       showDetails(c);
     else
-      showDetails(p);
+      showDetails(c, p);
   } else if (sender() == ui->httpHitsView) {
     QPcapHttpHit hit = _httpHitModel.hit(
           _httpHitProxyModel.mapToSource(currentIndex));
     selectConversationInConversations(hit.conversation());
     selectPacketInPackets(hit.firstRequestPacket());
-    showDetails(hit.firstRequestPacket()); // LATER do something better
+    showDetails(QPcapTcpConversation(), hit.firstRequestPacket()); // LATER do something better
   } else {
     //qDebug() << "forwardSelection from nowhere";
   }
@@ -131,19 +153,29 @@ void HttpppMainWindow::showDetails(QPcapTcpConversation conversation) {
   if (ui->detailsView->isVisible()) {
     QString text;
     foreach (QPcapTcpPacket p, conversation.packets()) {
+      QByteArray ba = p.payload();
+      ba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+          .replace("\n", "<br/>");
       bool upstream = conversation.matchesSameStream(p);
-      text.append(QString("<p><font color=%1>%2")
-                  .arg(upstream ? "red" : "blue")
-                  .arg(p.payload().constData())); // TODO escape
+      text.append(QString("<p><font color=%1><pre>%2</pre></font></p>")
+                  .arg(upstream ? "red" : "blue").arg(ba.constData()));
     }
     ui->detailsView->setHtml(text);
   }
 }
 
-void HttpppMainWindow::showDetails(QPcapTcpPacket packet) {
+void HttpppMainWindow::showDetails(QPcapTcpConversation conversation,
+                                   QPcapTcpPacket packet) {
   if (ui->detailsView->isVisible()) {
-    ui->detailsView->setHtml(QString("<p>%1<p>%2").arg(packet.english())
-                             .arg(packet.payload().constData())); // TODO escape
+    QByteArray ba = packet.payload();
+    ba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace("\n", "<br/>");
+    bool upstream = conversation.isNull()
+        || conversation.matchesSameStream(packet);
+    ui->detailsView->setHtml(
+          QString("<p>%1</p><p><font color=%2><pre>%3</pre></font></p>")
+          .arg(packet.english()).arg(upstream ? "red" : "blue")
+          .arg(ba.constData()));
   }
 }
 
