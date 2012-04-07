@@ -1,0 +1,84 @@
+#
+
+!include "MUI2.nsh"
+!include "FileFunc.nsh"
+
+Name "HTTP Passive Probe (httppp)"
+OutFile "httppp_installer.exe"
+InstallDir "$PROGRAMFILES\httppp"
+InstallDirRegKey HKCU SOFTWARE\httppp "Install_Dir"
+!define MUI_ICON "../httppp/icons/httppp.ico"
+SetCompressor /FINAL /SOLID lzma
+
+RequestExecutionLevel admin
+
+!define MUI_ABORTWARNING
+
+!insertmacro MUI_PAGE_LICENSE "../LICENSE.txt"
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+
+!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "French"
+
+Section "httppp"
+  SectionIn RO
+
+  SetOutPath "$INSTDIR\."
+  CreateDirectory "$INSTDIR\plugins"
+  CreateDirectory "$INSTDIR\plugins\imageformats"
+  File "libgcc_s_dw2-1.dll"
+  File "mingwm10.dll"
+  File "qtcore4.dll"
+  File "qtgui4.dll"
+  File "qtxml4.dll"
+  File "qtsvg4.dll"
+  File qt.conf
+  File "/oname=$INSTDIR\plugins\imageformats\qsvg4.dll" plugins/imageformats/qsvg4.dll
+  File "wpcap.dll"
+  File "qpcap.dll"
+  File "httppp.exe"
+  File "thttppp.exe"
+SectionEnd
+
+Section "Start Menu Shortcuts"
+  CreateDirectory "$SMPROGRAMS\httppp"
+  CreateShortCut "$SMPROGRAMS\httppp\Uninstall httppp.lnk" "$INSTDIR\Uninstall httppp.exe" "" "$INSTDIR\Uninstall httppp.exe" 0
+  CreateShortCut "$SMPROGRAMS\httppp\httppp.lnk" "$INSTDIR\.\httppp.exe" "" "$INSTDIR\.\httppp.exe" 0
+SectionEnd
+
+Section "Desktop Icons"
+  CreateShortCut "$DESKTOP\httppp.lnk" "$INSTDIR\.\httppp.exe" "" "$INSTDIR\.\httppp.exe" 0
+SectionEnd
+
+Section "Uninstall"
+  Delete /rebootok "$DESKTOP\httppp.lnk"
+  Delete /rebootok "$SMPROGRAMS\httppp\httppp.lnk"
+  Delete /rebootok "$SMPROGRAMS\httppp\Uninstall httppp.lnk"
+  RMDir "$SMPROGRAMS\httppp"
+
+  Delete /rebootok "$INSTDIR\Uninstall httppp.exe"
+  Delete /rebootok "$INSTDIR\thttppp.exe"
+  Delete /rebootok "$INSTDIR\httppp.exe"
+  Delete /rebootok "$INSTDIR\wpcap.dll"
+  Delete /rebootok "$INSTDIR\qpcap.dll"
+  Delete /rebootok "$INSTDIR\plugins\imageformats\qsvg4.dll"
+  Delete /rebootok "$INSTDIR\qt.conf"
+  Delete /rebootok "$INSTDIR\qtsvg4.dll"
+  Delete /rebootok "$INSTDIR\qtxml4.dll"
+  Delete /rebootok "$INSTDIR\qtgui4.dll"
+  Delete /rebootok "$INSTDIR\qtcore4.dll"
+  Delete /rebootok "$INSTDIR\mingwm10.dll"
+  Delete /rebootok "$INSTDIR\libgcc_s_dw2-1.dll"
+  RMDir "$INSTDIR\plugins\imageformats"
+  RMDir "$INSTDIR\plugins"
+  RMDir "$INSTDIR\."
+  RMDir "$INSTDIR"
+SectionEnd
+
+Section -post
+  WriteUninstaller "$INSTDIR\Uninstall httppp.exe"
+SectionEnd
