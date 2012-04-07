@@ -3,5 +3,7 @@
         <file>icons/down.svg</file>
         <file>icons/up.svg</file>
         <file>icons/updown.svg</file>
+        <file>icons/blue_down_arrow.svg</file>
+        <file>icons/red_up_arrow.svg</file>
     </qresource>
 </RCC>

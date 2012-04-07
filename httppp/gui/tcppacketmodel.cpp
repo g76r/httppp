@@ -5,7 +5,9 @@
 
 TcpPacketModel::TcpPacketModel(QObject *parent)
   : QAbstractItemModel(parent),
-    _root(new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true)) {
+    _root(new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true)),
+    _upstreamIcon(":/icons/red_up_arrow.svg"),
+    _downstreamIcon(":/icons/blue_down_arrow.svg") {
 }
 
 TcpPacketModel::~TcpPacketModel() {
@@ -65,7 +67,9 @@ QVariant TcpPacketModel::data(const QModelIndex &index, int role) const {
       }
       break;
     case Qt::DecorationRole:
-      // TODO icon for up and downstream
+      if (!item->_packet.isNull())
+       return (item->_conversation.matchesSameStream(item->_packet))
+           ? _upstreamIcon : _downstreamIcon;
       break;
     case Qt::ForegroundRole:
       return QBrush(item->_upstreamFinished ? QColor(255, 0, 0)
@@ -88,12 +92,10 @@ QVariant TcpPacketModel::data(const QModelIndex &index, int role) const {
 
 QVariant TcpPacketModel::headerData(int section, Qt::Orientation orientation,
                                     int role) const {
-  // TODO
+  if (section == 0 && orientation == Qt::Horizontal && role == Qt::DisplayRole)
+    return "TCP Sequence Number";
   return QVariant();
 }
-
-//Qt::ItemFlags flags(const QModelIndex & index) const {
-//}
 
 void TcpPacketModel::addTcpUpstreamPacket(QPcapTcpPacket packet,
                                           QPcapTcpConversation conversation) {
@@ -105,7 +107,6 @@ void TcpPacketModel::addTcpDownstreamPacket(QPcapTcpPacket packet,
   addPacket(conversation, packet, false);
 }
 
-//#include <QtDebug>
 void TcpPacketModel::addPacket(QPcapTcpConversation conversation,
                                QPcapTcpPacket packet, bool upstream) {
   //qDebug() << "addPacket" << packet;
@@ -135,7 +136,6 @@ QModelIndex TcpPacketModel::index(QPcapTcpConversation conversation) const {
 }
 
 QModelIndex TcpPacketModel::index(QPcapTcpPacket packet) const {
-  // LATER optimize
   for (int i = 0; i < _root->_children.size(); ++i) {
     TreeItem *ti = _root->_children.at(i);
     for (int j = 0; j < ti->_children.size(); ++j) {

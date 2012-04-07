@@ -4,9 +4,9 @@
 #include <QAbstractItemModel>
 #include "qpcaptcppacket.h"
 #include "qpcaptcpconversation.h"
+#include <QIcon>
 
-class TcpPacketModel : public QAbstractItemModel
-{
+class TcpPacketModel : public QAbstractItemModel {
   Q_OBJECT
 private:
   class TreeItem {
@@ -36,6 +36,7 @@ private:
   };
 
   TreeItem* _root;
+  QIcon _upstreamIcon, _downstreamIcon;
 
 public:
   explicit TcpPacketModel(QObject *parent = 0);
