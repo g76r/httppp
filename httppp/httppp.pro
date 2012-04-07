@@ -45,3 +45,8 @@ FORMS += \
 
 RESOURCES += \
     icons.qrc
+
+# Windows application icon
+RC_FILE += \
+    httppp.rc
+
