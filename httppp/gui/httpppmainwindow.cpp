@@ -98,7 +98,8 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
           _httpHitProxyModel.mapToSource(currentIndex));
     selectConversationInConversations(hit.conversation());
     selectPacketInPackets(hit.firstRequestPacket());
-    showDetails(QPcapTcpConversation(), hit.firstRequestPacket()); // LATER do something better
+    // LATER should display all packets in HTTP hit rather than first one
+    showDetails(QPcapTcpConversation(), hit.firstRequestPacket());
   } else {
     //qDebug() << "forwardSelection from nowhere";
   }
@@ -189,7 +190,7 @@ void HttpppMainWindow::loadFileDialog() {
 }
 
 void HttpppMainWindow::startCaptureDialog() {
-  // LATER
+  // LATER add direct capture feature
 }
 
 void HttpppMainWindow::httpHitsToCsvDialog() {

@@ -15,7 +15,7 @@ void TcpConversationModel::addConversation(QPcapTcpConversation conversation) {
 void TcpConversationModel::setConversationFinished(
     QPcapTcpConversation conversation) {
   Q_UNUSED(conversation);
-  // TODO
+  // LATER may do something such as changing conversation color
 }
 
 QModelIndex TcpConversationModel::index(int row, int column,

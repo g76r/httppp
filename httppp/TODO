@@ -1,3 +1,5 @@
 créer une vue agrégats?
 compiler sur mac
 permettre de lancer une capture live plutôt que de lire un fichier
+supporter la fragmentation IP
+supporter les hits passant par un proxy
