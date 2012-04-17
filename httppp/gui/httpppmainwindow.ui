@@ -43,7 +43,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="pushHitsToCSV">
          <property name="text">
           <string>HTTP Hits to CSV</string>
          </property>
@@ -105,6 +105,19 @@
         <widget class="QPushButton" name="pushDetails">
          <property name="text">
           <string>Details</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushConsole">
+         <property name="text">
+          <string>Console</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -394,6 +407,18 @@
       </layout>
      </widget>
     </item>
+    <item>
+     <widget class="QGroupBox" name="panelConsole">
+      <property name="title">
+       <string>Console</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPlainTextEdit" name="console"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -461,8 +486,8 @@
    <slot>forwardSelection(QModelIndex)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>266</x>
-     <y>327</y>
+     <x>306</x>
+     <y>321</y>
     </hint>
     <hint type="destinationlabel">
      <x>0</x>
@@ -477,8 +502,8 @@
    <slot>changePanelVisibility(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>477</x>
-     <y>34</y>
+     <x>423</x>
+     <y>49</y>
     </hint>
     <hint type="destinationlabel">
      <x>467</x>
@@ -493,8 +518,8 @@
    <slot>changePanelVisibility(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>567</x>
-     <y>43</y>
+     <x>504</x>
+     <y>49</y>
     </hint>
     <hint type="destinationlabel">
      <x>561</x>
@@ -509,7 +534,7 @@
    <slot>changePanelVisibility(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>666</x>
+     <x>585</x>
      <y>49</y>
     </hint>
     <hint type="destinationlabel">
@@ -525,7 +550,7 @@
    <slot>changePanelVisibility(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>747</x>
+     <x>666</x>
      <y>49</y>
     </hint>
     <hint type="destinationlabel">
@@ -567,7 +592,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton</sender>
+   <sender>pushHitsToCSV</sender>
    <signal>clicked()</signal>
    <receiver>HttpppMainWindow</receiver>
    <slot>httpHitsToCsvDialog()</slot>
@@ -589,12 +614,28 @@
    <slot>forwardSelection(QModelIndex)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>474</x>
-     <y>381</y>
+     <x>578</x>
+     <y>321</y>
     </hint>
     <hint type="destinationlabel">
      <x>0</x>
      <y>367</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushConsole</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>changePanelVisibility(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>722</x>
+     <y>38</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>751</x>
+     <y>24</y>
     </hint>
    </hints>
   </connection>

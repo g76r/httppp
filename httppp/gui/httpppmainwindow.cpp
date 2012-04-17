@@ -2,10 +2,15 @@
 #include "ui_httpppmainwindow.h"
 #include <QFileDialog>
 #include "util/csvwriter.h"
+#include <QMetaObject>
+
+static HttpppMainWindow *instance;
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
   ui->setupUi(this);
+  instance = this;
+  qInstallMsgHandler(staticMessageHandler);
   ui->switchField1->appendPixmap(":/icons/up.svg");
   ui->switchField1->appendPixmap(":/icons/down.svg");
   ui->switchField1->appendPixmap(":/icons/updown.svg");
@@ -15,6 +20,13 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/up.svg");
   ui->switchField3->appendPixmap(":/icons/down.svg");
   ui->switchField3->appendPixmap(":/icons/updown.svg");
+  _etherStack.moveToThread(&_thread1);
+  _ipStack.moveToThread(&_thread1);
+  _tcpStack.moveToThread(&_thread1);
+  _httpStack.moveToThread(&_thread1);
+  _thread1.start();
+  //_thread2.start();
+  //_thread3.start();
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
@@ -35,6 +47,11 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   _httpStack.connectToLowerStack(_tcpStack);
   connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
           &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
+}
+
+HttpppMainWindow::~HttpppMainWindow() {
+  qInstallMsgHandler(0);
+  delete ui;
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
@@ -60,8 +77,29 @@ void HttpppMainWindow::loadFile(QString filename) {
   _pcapEngine.start();
 }
 
-HttpppMainWindow::~HttpppMainWindow() {
-  delete ui;
+void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
+  if (instance)
+    instance->messageHandler(type, msg);
+}
+
+void HttpppMainWindow::messageHandler(QtMsgType type, const char *msg) {
+  QString prefix = QString::number(type);
+  switch (type) {
+  case QtDebugMsg:
+    prefix = "D";
+    break;
+  case QtWarningMsg:
+    prefix = "W";
+    break;
+  case QtCriticalMsg:
+    prefix = "C";
+    break;
+  case QtFatalMsg:
+    prefix = "F";
+  }
+  QString text = QString("%1: %2\n").arg(prefix).arg(msg?:"<null>");
+  QMetaObject::invokeMethod(ui->console, "appendPlainText",
+                            Qt::QueuedConnection, Q_ARG(QString, text));
 }
 
 void HttpppMainWindow::changePanelVisibility(bool visible) {
@@ -73,6 +111,8 @@ void HttpppMainWindow::changePanelVisibility(bool visible) {
     ui->panelHttpHits->setVisible(visible);
   } else if (sender() == ui->pushDetails) {
     ui->panelDetails->setVisible(visible);
+  } else if (sender() == ui->pushConsole) {
+    ui->panelConsole->setVisible(visible);
   }
 }
 

@@ -11,6 +11,7 @@
 #include "tcppacketmodel.h"
 #include "httphitmodel.h"
 #include <QSortFilterProxyModel>
+#include <QThread>
 
 namespace Ui {
 class HttpppMainWindow;
@@ -20,6 +21,7 @@ class HttpppMainWindow : public QMainWindow {
   Q_OBJECT
 private:
   Ui::HttpppMainWindow *ui;
+  QThread _thread1, _thread2, _thread3;
   QPcapEngine _pcapEngine;
   QPcapEthernetStack _etherStack;
   QPcapIPv4Stack _ipStack;
@@ -50,6 +52,8 @@ private:
   void selectPacketInPackets(QPcapTcpPacket packet);
   void showDetails(QPcapTcpConversation conversation);
   void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet);
+  static void staticMessageHandler(QtMsgType type, const char *msg);
+  void messageHandler(QtMsgType type, const char *msg);
 };
 
 #endif // HTTPPPMAINWINDOW_H
