@@ -31,6 +31,7 @@ private:
   TcpPacketModel _tcpPacketModel;
   HttpHitModel _httpHitModel;
   QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
+  QString _lastLoadedFilename;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
@@ -43,6 +44,7 @@ private slots:
 
 public slots:
   void loadFileDialog();
+  void reload();
   void startCaptureDialog();
   void httpHitsToCsvDialog();
 

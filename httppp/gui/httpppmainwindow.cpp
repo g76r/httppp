@@ -227,8 +227,13 @@ void HttpppMainWindow::loadFileDialog() {
   filename = QFileDialog ::getOpenFileName(window(), tr("Load Capture File"),
                                            "", tr("Capture files (*)"), 0);
   if (filename.size()) {
-    loadFile(filename);
+    loadFile(_lastLoadedFilename = filename);
   }
+}
+
+void HttpppMainWindow::reload() {
+  if (!_lastLoadedFilename.isEmpty())
+    loadFile(_lastLoadedFilename);
 }
 
 void HttpppMainWindow::startCaptureDialog() {

@@ -33,12 +33,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushCapture">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+        <widget class="QPushButton" name="pushReload">
          <property name="text">
-          <string>Start Capture</string>
+          <string>Reload</string>
          </property>
         </widget>
        </item>
@@ -618,22 +615,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushCapture</sender>
-   <signal>clicked()</signal>
-   <receiver>HttpppMainWindow</receiver>
-   <slot>startCaptureDialog()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>120</x>
-     <y>48</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1</x>
-     <y>84</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pushHitsToCSV</sender>
    <signal>clicked()</signal>
    <receiver>HttpppMainWindow</receiver>
@@ -697,6 +678,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushReload</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpppMainWindow</receiver>
+   <slot>reload()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>143</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>100</x>
+     <y>22</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>changePanelVisibility(bool)</slot>
@@ -704,5 +701,6 @@
   <slot>loadFileDialog()</slot>
   <slot>startCaptureDialog()</slot>
   <slot>httpHitsToCsvDialog()</slot>
+  <slot>reload()</slot>
  </slots>
 </ui>
