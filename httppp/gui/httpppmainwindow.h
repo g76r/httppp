@@ -55,7 +55,7 @@ private:
   void showDetails(QPcapTcpConversation conversation);
   void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet);
   static void staticMessageHandler(QtMsgType type, const char *msg);
-  void messageHandler(QtMsgType type, const char *msg);
+  Q_INVOKABLE void messageHandler(QString text);
 };
 
 #endif // HTTPPPMAINWINDOW_H

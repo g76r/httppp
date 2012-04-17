@@ -63,7 +63,7 @@ QVariant TcpPacketModel::data(const QModelIndex &index, int role) const {
         return QVariant();
       switch (index.column()) {
       case 0:
-        return item->_packet.seqNumber();
+        return item->_packet.toShortText();
       }
       break;
     case Qt::DecorationRole:
@@ -80,7 +80,7 @@ QVariant TcpPacketModel::data(const QModelIndex &index, int role) const {
     case Qt::DisplayRole:
     case Qt::EditRole:
     case Qt::ToolTipRole:
-      return item->_conversation.english();
+      return item->_conversation.toText();
     case Qt::DecorationRole:
       break;
     case Qt::ForegroundRole:

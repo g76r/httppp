@@ -9,6 +9,7 @@ static HttpppMainWindow *instance;
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
   ui->setupUi(this);
+  ui->panelMessages->setVisible(false);
   instance = this;
   qInstallMsgHandler(staticMessageHandler);
   ui->switchField1->appendPixmap(":/icons/up.svg");
@@ -22,6 +23,7 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/updown.svg");
   _etherStack.moveToThread(&_thread1);
   _ipStack.moveToThread(&_thread1);
+  // tcp and http stacks must share same thread because of discardXXXBuffer
   _tcpStack.moveToThread(&_thread1);
   _httpStack.moveToThread(&_thread1);
   _thread1.start();
@@ -55,6 +57,10 @@ HttpppMainWindow::~HttpppMainWindow() {
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
+  if (_pcapEngine.isRunning()) { // LATER this is not sufficient since there are asynchronous signals
+    qDebug() << "cannot load file when pcap engine is already running";
+    return;
+  }
   QPcapTcpPacket::resetPacketCounter();
   QPcapTcpConversation::resetConversationCounter();
   _tcpConversationModel.clear();
@@ -79,12 +85,7 @@ void HttpppMainWindow::loadFile(QString filename) {
 }
 
 void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
-  if (instance)
-    instance->messageHandler(type, msg);
-}
-
-void HttpppMainWindow::messageHandler(QtMsgType type, const char *msg) {
-  if (!ui->pushEnableMessages->isChecked())
+  if (!instance)
     return;
   QString prefix = QString::number(type);
   switch (type) {
@@ -101,8 +102,16 @@ void HttpppMainWindow::messageHandler(QtMsgType type, const char *msg) {
     prefix = "F";
   }
   QString text = QString("%1: %2").arg(prefix).arg(msg?:"<null>");
-  QMetaObject::invokeMethod(ui->messages, "appendPlainText",
+  QMetaObject::invokeMethod(instance, "messageHandler",
                             Qt::QueuedConnection, Q_ARG(QString, text));
+}
+
+void HttpppMainWindow::messageHandler(QString text) {
+  if (!ui->pushEnableMessages->isChecked())
+    return;
+  ui->messages->appendPlainText(text);
+  if (!ui->pushMessages->isChecked() && ui->pushAutoOpenMessages->isChecked())
+    ui->pushMessages->setChecked(true);
 }
 
 void HttpppMainWindow::changePanelVisibility(bool visible) {
@@ -218,7 +227,7 @@ void HttpppMainWindow::showDetails(QPcapTcpConversation conversation,
         || conversation.matchesSameStream(packet);
     ui->detailsView->setHtml(
           QString("<p>%1</p><p><font color=%2><pre>%3</pre></font></p>")
-          .arg(packet.english()).arg(upstream ? "red" : "blue")
+          .arg(packet.toText()).arg(upstream ? "red" : "blue")
           .arg(ba.constData()));
   }
 }
