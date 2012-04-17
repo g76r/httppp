@@ -83,6 +83,8 @@ void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
 }
 
 void HttpppMainWindow::messageHandler(QtMsgType type, const char *msg) {
+  if (!ui->pushEnableMessages->isChecked())
+    return;
   QString prefix = QString::number(type);
   switch (type) {
   case QtDebugMsg:
@@ -97,8 +99,8 @@ void HttpppMainWindow::messageHandler(QtMsgType type, const char *msg) {
   case QtFatalMsg:
     prefix = "F";
   }
-  QString text = QString("%1: %2\n").arg(prefix).arg(msg?:"<null>");
-  QMetaObject::invokeMethod(ui->console, "appendPlainText",
+  QString text = QString("%1: %2").arg(prefix).arg(msg?:"<null>");
+  QMetaObject::invokeMethod(ui->messages, "appendPlainText",
                             Qt::QueuedConnection, Q_ARG(QString, text));
 }
 
@@ -111,8 +113,8 @@ void HttpppMainWindow::changePanelVisibility(bool visible) {
     ui->panelHttpHits->setVisible(visible);
   } else if (sender() == ui->pushDetails) {
     ui->panelDetails->setVisible(visible);
-  } else if (sender() == ui->pushConsole) {
-    ui->panelConsole->setVisible(visible);
+  } else if (sender() == ui->pushMessages) {
+    ui->panelMessages->setVisible(visible);
   }
 }
 
