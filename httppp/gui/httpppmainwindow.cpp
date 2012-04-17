@@ -55,6 +55,7 @@ HttpppMainWindow::~HttpppMainWindow() {
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
+  QPcapTcpPacket::resetPacketCounter();
   QPcapTcpConversation::resetConversationCounter();
   _tcpConversationModel.clear();
   _tcpPacketModel.clear();

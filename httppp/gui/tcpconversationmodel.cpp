@@ -23,7 +23,7 @@ QModelIndex TcpConversationModel::index(int row, int column,
   Q_UNUSED(parent);
   if (row < 0 || row >= _list.size())
     return QModelIndex();
-  return createIndex(row, column, _list.at(row).id());
+  return createIndex(row, column, (quint32)_list.at(row).id());  // LATER fix 32/64 inconsistency
 }
 
 QModelIndex TcpConversationModel::index(QPcapTcpConversation
@@ -31,7 +31,7 @@ QModelIndex TcpConversationModel::index(QPcapTcpConversation
   for (int i = 0; i < _list.size(); ++i) {
     const QPcapTcpConversation &c = _list.at(i);
     if (c == conversation)
-      return createIndex(i, 0, c.id());
+      return createIndex(i, 0, (quint32)c.id()); // LATER fix 32/64 inconsistency
   }
   return QModelIndex();
 }
@@ -39,7 +39,7 @@ QModelIndex TcpConversationModel::index(QPcapTcpConversation
 QPcapTcpConversation TcpConversationModel::conversation(
     const QModelIndex &index) const {
   foreach (QPcapTcpConversation c, _list) {
-    if (c.id() == index.internalId())
+    if (c.id() == (quint64)index.internalId()) // LATER fix 32/64 inconsistency
       return c;
   }
   return QPcapTcpConversation();
