@@ -6,6 +6,7 @@
 /httppp/thttppp
 /httppp/*.pcap
 /windows/*.pcap
-/windows/httppp_installer.exe
-/windows/httppp_portable.zip
+/windows/httppp-win32-installer.exe
+/windows/httppp-win32-portable.zip
+/linux/httppp-linux-i386.tar.gz
 /www

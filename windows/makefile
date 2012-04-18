@@ -8,5 +8,5 @@ nsis:
 	cd image; makensis -NOCD ../httppp.nsis
 
 zip:
-	rm -f httppp_portable.zip
-	cd image; zip -r9 ../httppp_portable.zip .
+	rm -f httppp-win32-portable.zip
+	cd image; zip -r9 ../httppp-win32-portable.zip .

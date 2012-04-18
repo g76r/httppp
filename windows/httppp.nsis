@@ -4,7 +4,7 @@
 !include "FileFunc.nsh"
 
 Name "HTTP Passive Probe (httppp)"
-OutFile "../httppp_installer.exe"
+OutFile "../httppp-win32-installer.exe"
 InstallDir "$PROGRAMFILES\httppp"
 InstallDirRegKey HKCU SOFTWARE\httppp "Install_Dir"
 !define MUI_ICON "../../httppp/icons/httppp.ico"
