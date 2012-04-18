@@ -4,17 +4,17 @@
 !include "FileFunc.nsh"
 
 Name "HTTP Passive Probe (httppp)"
-OutFile "httppp_installer.exe"
+OutFile "../httppp_installer.exe"
 InstallDir "$PROGRAMFILES\httppp"
 InstallDirRegKey HKCU SOFTWARE\httppp "Install_Dir"
-!define MUI_ICON "../httppp/icons/httppp.ico"
+!define MUI_ICON "../../httppp/icons/httppp.ico"
 SetCompressor /FINAL /SOLID lzma
 
 RequestExecutionLevel admin
 
 !define MUI_ABORTWARNING
 
-!insertmacro MUI_PAGE_LICENSE "../LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "../../LICENSE.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES

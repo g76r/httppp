@@ -7,4 +7,5 @@
 /httppp/*.pcap
 /windows/*.pcap
 /windows/httppp_installer.exe
+/windows/httppp_portable.zip
 /www
