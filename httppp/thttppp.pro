@@ -21,8 +21,9 @@ linux-g++ {
   MOC_DIR = ../httppp-build-linux/moc
 }
 
-SOURCES += tui/main.cpp \
+SOURCES += tui/main-tui.cpp \
     tui/printer.cpp
 
 HEADERS += \
-    tui/printer.h
+    tui/printer.h \
+    global.h

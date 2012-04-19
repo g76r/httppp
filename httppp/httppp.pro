@@ -20,7 +20,7 @@ linux-g++ {
   MOC_DIR = ../httppp-build-linux/moc
 }
 
-SOURCES += gui/main.cpp \
+SOURCES += \
     gui/httpppmainwindow.cpp \
     gui/tcpconversationmodel.cpp \
     gui/tcppacketmodel.cpp \
@@ -28,7 +28,8 @@ SOURCES += gui/main.cpp \
     widget/enhancedtableview.cpp \
     gui/httphitmodel.cpp \
     util/csvwriter.cpp \
-    widget/multipixmapbutton.cpp
+    widget/multipixmapbutton.cpp \
+    gui/main-gui.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
@@ -38,7 +39,8 @@ HEADERS += \
     widget/enhancedtableview.h \
     gui/httphitmodel.h \
     util/csvwriter.h \
-    widget/multipixmapbutton.h
+    widget/multipixmapbutton.h \
+    global.h
 
 FORMS += \
     gui/httpppmainwindow.ui
