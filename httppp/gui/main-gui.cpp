@@ -3,6 +3,7 @@
 #include "global.h"
 
 int main(int argc, char *argv[]) {
+  QApplication::setStyle("cleanlooks");
   QApplication a(argc, argv);
   HttpppMainWindow w;
   w.setWindowTitle(QObject::tr("httppp version %1", "window title")

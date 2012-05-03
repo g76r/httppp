@@ -32,14 +32,16 @@ private:
   HttpHitModel _httpHitModel;
   QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
   QString _lastLoadedFilename;
+  bool _firstShow;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
-  void loadFile(QString filename);
   ~HttpppMainWindow();
+  void loadFile(QString filename);
+  void showEvent(QShowEvent *e);
 
 private slots:
-  void changePanelVisibility(bool visible);
+  void toggleMessagesPanel();
   void forwardSelection(QModelIndex currentIndex);
 
 public slots:

@@ -7,9 +7,12 @@
 static HttpppMainWindow *instance;
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
-  : QMainWindow(parent), ui(new Ui::HttpppMainWindow) {
+  : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true) {
   ui->setupUi(this);
-  ui->panelMessages->setVisible(false);
+  ui->panelsSplitter->setStretchFactor(0, 0);
+  ui->panelsSplitter->setStretchFactor(1, 0);
+  ui->panelsSplitter->setStretchFactor(2, 1);
+  ui->panelsSplitter->setStretchFactor(3, 0);
   instance = this;
   qInstallMsgHandler(staticMessageHandler);
   ui->switchField1->appendPixmap(":/icons/up.svg");
@@ -110,21 +113,35 @@ void HttpppMainWindow::messageHandler(QString text) {
   if (!ui->pushEnableMessages->isChecked())
     return;
   ui->messages->appendPlainText(text);
-  if (!ui->pushMessages->isChecked() && ui->pushAutoOpenMessages->isChecked())
-    ui->pushMessages->setChecked(true);
+  if (ui->pushAutoOpenMessages->isChecked()) {
+    QList<int> sizes = ui->mainSplitter->sizes();
+    if (sizes[1] == 0) {
+      sizes[1] = ui->panelMessages->sizeHint().height();
+      sizes[0] = ui->mainSplitter->sizeHint().height()
+          - ui->panelMessages->sizeHint().height();
+      ui->mainSplitter->setSizes(sizes);
+    }
+  }
 }
 
-void HttpppMainWindow::changePanelVisibility(bool visible) {
-  if (sender() == ui->pushTcpConversations) {
-    ui->panelTcpConversations->setVisible(visible);
-  } else if (sender() == ui->pushTcpPackets) {
-    ui->panelTcpPackets->setVisible(visible);
-  } else if (sender() == ui->pushHttpHits) {
-    ui->panelHttpHits->setVisible(visible);
-  } else if (sender() == ui->pushDetails) {
-    ui->panelDetails->setVisible(visible);
-  } else if (sender() == ui->pushMessages) {
-    ui->panelMessages->setVisible(visible);
+void HttpppMainWindow::showEvent(QShowEvent *e) {
+  QMainWindow::showEvent(e);
+  if (_firstShow) {
+    toggleMessagesPanel();
+    _firstShow = false;
+  }
+}
+
+void HttpppMainWindow::toggleMessagesPanel() {
+  QList<int> sizes = ui->mainSplitter->sizes();
+  if (sizes[1] == 0) {
+    sizes[1] = ui->panelMessages->sizeHint().height();
+    sizes[0] = ui->mainSplitter->sizeHint().height()
+        - ui->panelMessages->sizeHint().height();
+    ui->mainSplitter->setSizes(sizes);
+  } else {
+    sizes[1] = 0;
+    ui->mainSplitter->setSizes(sizes);
   }
 }
 
