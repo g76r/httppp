@@ -130,9 +130,9 @@ QVariant HttpHitModel::headerData(int section, Qt::Orientation orientation,
     case 14:
       return tr("Timestamp");
     case 15:
-      return tr("TTFB");
+      return tr("TTFB (usec)");
     case 16:
-      return tr("TTLB");
+      return tr("TTLB (usec)");
     case 17:
       return tr("Return Code");
     case 18:
