@@ -31,9 +31,6 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   // tcp and http stacks must share same thread because of discardXXXBuffer
   _tcpStack.moveToThread(&_thread1);
   _httpStack.moveToThread(&_thread1);
-  _thread1.start();
-  //_thread2.start();
-  //_thread3.start();
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
@@ -60,9 +57,18 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
           &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
   connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
           this, SLOT(incrementHitCounter()));
+  _thread1.start();
+  //_thread2.start();
+  //_thread3.start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
+  _thread1.exit();
+  _thread1.wait(200);
+  //_thread2.exit();
+  //_thread2.wait(200);
+  //_thread3.exit();
+  //_thread3.wait(200);
   qInstallMsgHandler(0);
   delete ui;
 }

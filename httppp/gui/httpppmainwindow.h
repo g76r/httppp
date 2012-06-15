@@ -21,7 +21,7 @@ class HttpppMainWindow : public QMainWindow {
   Q_OBJECT
 private:
   Ui::HttpppMainWindow *ui;
-  QThread _thread1, _thread2, _thread3;
+  QThread _thread1; //, _thread2, _thread3;
   QPcapEngine _pcapEngine;
   QPcapEthernetStack _etherStack;
   QPcapIPv4Stack _ipStack;
