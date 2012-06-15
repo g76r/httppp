@@ -130,7 +130,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="labelPacketCount">
+        <widget class="QLabel" name="labelPacketsCount">
          <property name="text">
           <string>0</string>
          </property>
@@ -144,7 +144,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="labelHitCount">
+        <widget class="QLabel" name="labelHitsCount">
          <property name="text">
           <string>0</string>
          </property>

@@ -22,18 +22,17 @@ class HttpppMainWindow : public QMainWindow {
 private:
   Ui::HttpppMainWindow *ui;
   QThread _thread1; //, _thread2, _thread3;
-  QPcapEngine _pcapEngine;
-  QPcapEthernetStack _etherStack;
-  QPcapIPv4Stack _ipStack;
-  QPcapTcpStack _tcpStack;
-  QPcapHttpStack _httpStack;
+  QPcapEngine *_pcapEngine;
+  QPcapEthernetStack *_etherStack;
+  QPcapIPv4Stack *_ipStack;
+  QPcapTcpStack *_tcpStack;
+  QPcapHttpStack *_httpStack;
   TcpConversationModel _tcpConversationModel;
   TcpPacketModel _tcpPacketModel;
   HttpHitModel _httpHitModel;
   QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
   QString _lastLoadedFilename;
   bool _firstShow;
-  int _packetCounter, _hitCounter;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
@@ -44,8 +43,8 @@ public:
 private slots:
   void toggleMessagesPanel();
   void forwardSelection(QModelIndex currentIndex);
-  void incrementPacketCounter();
-  void incrementHitCounter();
+  void updatePacketsCount(unsigned long count);
+  void updateHitsCount(unsigned long count);
   void captureFinished();
 
 public slots:

@@ -7,8 +7,7 @@
 static HttpppMainWindow *instance;
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
-  : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true),
-    _packetCounter(0) {
+  : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true) {
   ui->setupUi(this);
   ui->labelLoading->setVisible(false);
   ui->panelsSplitter->setStretchFactor(0, 0);
@@ -26,43 +25,48 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/up.svg");
   ui->switchField3->appendPixmap(":/icons/down.svg");
   ui->switchField3->appendPixmap(":/icons/updown.svg");
-  _etherStack.moveToThread(&_thread1);
-  _ipStack.moveToThread(&_thread1);
+
+
+  _pcapEngine = new QPcapEngine;
+  _etherStack = new QPcapEthernetStack(0, _pcapEngine);
+  _etherStack->moveToThread(&_thread1);
+  _ipStack = new QPcapIPv4Stack(0, _etherStack);
+  _ipStack->moveToThread(&_thread1);
+  _tcpStack = new QPcapTcpStack(0, _ipStack);
+  _tcpStack->moveToThread(&_thread1);
+  _httpStack = new QPcapHttpStack(0, _tcpStack);
   // tcp and http stacks must share same thread because of discardXXXBuffer
-  _tcpStack.moveToThread(&_thread1);
-  _httpStack.moveToThread(&_thread1);
+  _httpStack->moveToThread(_tcpStack->thread());
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
   _httpHitProxyModel.setSourceModel(&_httpHitModel);
   ui->httpHitsView->setModel(&_httpHitProxyModel);
-  connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
-                   &_etherStack, SLOT(layer1PacketReceived(QPcapLayer1Packet)));
-  connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
-                   this, SLOT(incrementPacketCounter()));
-  connect(&_pcapEngine, SIGNAL(captureFinished()),
-                   this, SLOT(captureFinished()));
-  connect(&_etherStack, SIGNAL(layer2PacketReceived(QPcapLayer2Packet)),
-                   &_ipStack, SLOT(layer2PacketReceived(QPcapLayer2Packet)));
-  connect(&_ipStack, SIGNAL(ipv4PacketReceived(QPcapIPv4Packet)),
-                   &_tcpStack, SLOT(ipPacketReceived(QPcapIPv4Packet)));
-  connect(&_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
+  connect(_pcapEngine, SIGNAL(packetsCountTick(ulong)),
+          this, SLOT(updatePacketsCount(ulong)));
+  connect(_pcapEngine, SIGNAL(captureFinished()),
+          this, SLOT(captureFinished()));
+  connect(_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
           &_tcpConversationModel, SLOT(addConversation(QPcapTcpConversation)));
-  connect(&_tcpStack, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
+  connect(_tcpStack, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
           &_tcpPacketModel, SLOT(addTcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
-  connect(&_tcpStack, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
+  connect(_tcpStack, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
           &_tcpPacketModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
-  _httpStack.connectToLowerStack(_tcpStack);
-  connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
+  connect(_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
           &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
-  connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
-          this, SLOT(incrementHitCounter()));
+  connect(_httpStack, SIGNAL(hitsCountTick(ulong)),
+          this, SLOT(updateHitsCount(ulong)));
   _thread1.start();
   //_thread2.start();
   //_thread3.start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
+  _httpStack->deleteLater();
+  _tcpStack->deleteLater();
+  _ipStack->deleteLater();
+  _etherStack->deleteLater();
+  _pcapEngine->deleteLater();
   _thread1.exit();
   _thread1.wait(200);
   //_thread2.exit();
@@ -74,35 +78,31 @@ HttpppMainWindow::~HttpppMainWindow() {
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
-  if (_pcapEngine.isRunning()) { // LATER this is not sufficient since there are asynchronous signals
+  if (_pcapEngine->isRunning()) { // LATER this is not sufficient since there are asynchronous signals
     qDebug() << "cannot load file when pcap engine is already running";
     return;
   }
-  QPcapTcpPacket::resetPacketCounter();
-  QPcapTcpConversation::resetConversationCounter();
   _tcpConversationModel.clear();
   _tcpPacketModel.clear();
   _httpHitModel.clear();
-  _tcpStack.reset();
-  _httpStack.clearFilters();
+  _tcpConversationProxyModel.clear();
+  _httpHitProxyModel.clear();
+  _httpStack->clearFilters();
   if (!ui->comboField1->currentText().isEmpty())
-    _httpStack.addFilter(
+    _httpStack->addFilter(
           ui->comboField1->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField1->currentIndex());
   if (!ui->comboField2->currentText().isEmpty())
-    _httpStack.addFilter(
+    _httpStack->addFilter(
           ui->comboField2->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField2->currentIndex());
   if (!ui->comboField3->currentText().isEmpty())
-    _httpStack.addFilter(
+    _httpStack->addFilter(
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
-  _packetCounter = _hitCounter = 0;
-  ui->labelPacketCount->setText("loading...");
-  ui->labelHitCount->setText("loading...");
   ui->labelLoading->setVisible(true);
-  _pcapEngine.loadFile(filename);
-  _pcapEngine.start();
+  _pcapEngine->loadFile(filename);
+  _pcapEngine->start();
 }
 
 void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
@@ -294,21 +294,14 @@ void HttpppMainWindow::httpHitsToCsvDialog() {
   }
 }
 
-// LATER make counters more efficients (signals are too expensive for that...)
-void HttpppMainWindow::incrementPacketCounter() {
-  ++_packetCounter;
-  if (_packetCounter % 500 == 0)
-    ui->labelPacketCount->setText(QString::number(_packetCounter));
+void HttpppMainWindow::updatePacketsCount(unsigned long count) {
+  ui->labelPacketsCount->setText(QString::number(count));
 }
 
-void HttpppMainWindow::incrementHitCounter() {
-  ++_hitCounter;
-  if (_hitCounter % 10 == 0)
-    ui->labelHitCount->setText(QString::number(_hitCounter));
+void HttpppMainWindow::updateHitsCount(unsigned long count) {
+  ui->labelHitsCount->setText(QString::number(count));
 }
 
 void HttpppMainWindow::captureFinished() {
-  ui->labelPacketCount->setText(QString::number(_packetCounter));
-  ui->labelHitCount->setText(QString::number(_hitCounter));
   ui->labelLoading->setVisible(false);
 }
