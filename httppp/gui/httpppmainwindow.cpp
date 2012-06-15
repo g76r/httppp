@@ -25,13 +25,15 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/up.svg");
   ui->switchField3->appendPixmap(":/icons/down.svg");
   ui->switchField3->appendPixmap(":/icons/updown.svg");
-
-
   _pcapEngine = new QPcapEngine;
   _etherStack = new QPcapEthernetStack(0, _pcapEngine);
-  _etherStack->moveToThread(&_thread1);
+  // ethernet and ip stacks are almost straightforward and therefore more
+  // balanced in the engine thread than the tcp/http one
+  // more than 3 threads (engine + tcp/http + main/gui/models) have been
+  // tested to be less efficient on a 2 cores 4 threads Core i5 PC with SSD
+  _etherStack->moveToThread(_pcapEngine->thread());
   _ipStack = new QPcapIPv4Stack(0, _etherStack);
-  _ipStack->moveToThread(&_thread1);
+  _ipStack->moveToThread(_pcapEngine->thread());
   _tcpStack = new QPcapTcpStack(0, _ipStack);
   _tcpStack->moveToThread(&_thread1);
   _httpStack = new QPcapHttpStack(0, _tcpStack);
@@ -57,8 +59,6 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   connect(_httpStack, SIGNAL(hitsCountTick(ulong)),
           this, SLOT(updateHitsCount(ulong)));
   _thread1.start();
-  //_thread2.start();
-  //_thread3.start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
@@ -69,10 +69,6 @@ HttpppMainWindow::~HttpppMainWindow() {
   _pcapEngine->deleteLater();
   _thread1.exit();
   _thread1.wait(200);
-  //_thread2.exit();
-  //_thread2.wait(200);
-  //_thread3.exit();
-  //_thread3.wait(200);
   qInstallMsgHandler(0);
   delete ui;
 }
