@@ -46,7 +46,7 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->httpHitsView->setModel(&_httpHitProxyModel);
   connect(_pcapEngine, SIGNAL(packetsCountTick(ulong)),
           this, SLOT(updatePacketsCount(ulong)));
-  connect(_pcapEngine, SIGNAL(captureFinished()),
+  connect(_httpStack, SIGNAL(captureFinished()),
           this, SLOT(captureFinished()));
   connect(_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
           &_tcpConversationModel, SLOT(addConversation(QPcapTcpConversation)));
