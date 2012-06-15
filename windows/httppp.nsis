@@ -41,7 +41,6 @@ Section "httppp"
   File "wpcap.dll"
   File "qpcap.dll"
   File "httppp.exe"
-  File "thttppp.exe"
 SectionEnd
 
 Section "Start Menu Shortcuts"
