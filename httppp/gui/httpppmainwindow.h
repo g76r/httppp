@@ -33,6 +33,7 @@ private:
   QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
   QString _lastLoadedFilename;
   bool _firstShow;
+  int _packetCounter, _hitCounter;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);
@@ -43,6 +44,9 @@ public:
 private slots:
   void toggleMessagesPanel();
   void forwardSelection(QModelIndex currentIndex);
+  void incrementPacketCounter();
+  void incrementHitCounter();
+  void captureFinished();
 
 public slots:
   void loadFileDialog();

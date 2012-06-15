@@ -7,8 +7,10 @@
 static HttpppMainWindow *instance;
 
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
-  : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true) {
+  : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true),
+    _packetCounter(0) {
   ui->setupUi(this);
+  ui->labelLoading->setVisible(false);
   ui->panelsSplitter->setStretchFactor(0, 0);
   ui->panelsSplitter->setStretchFactor(1, 0);
   ui->panelsSplitter->setStretchFactor(2, 1);
@@ -39,6 +41,10 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->httpHitsView->setModel(&_httpHitProxyModel);
   connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
                    &_etherStack, SLOT(layer1PacketReceived(QPcapLayer1Packet)));
+  connect(&_pcapEngine, SIGNAL(layer1PacketReceived(QPcapLayer1Packet)),
+                   this, SLOT(incrementPacketCounter()));
+  connect(&_pcapEngine, SIGNAL(captureFinished()),
+                   this, SLOT(captureFinished()));
   connect(&_etherStack, SIGNAL(layer2PacketReceived(QPcapLayer2Packet)),
                    &_ipStack, SLOT(layer2PacketReceived(QPcapLayer2Packet)));
   connect(&_ipStack, SIGNAL(ipv4PacketReceived(QPcapIPv4Packet)),
@@ -52,6 +58,8 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   _httpStack.connectToLowerStack(_tcpStack);
   connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
           &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
+  connect(&_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
+          this, SLOT(incrementHitCounter()));
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
@@ -83,6 +91,10 @@ void HttpppMainWindow::loadFile(QString filename) {
     _httpStack.addFilter(
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
+  _packetCounter = _hitCounter = 0;
+  ui->labelPacketCount->setText("loading...");
+  ui->labelHitCount->setText("loading...");
+  ui->labelLoading->setVisible(true);
   _pcapEngine.loadFile(filename);
   _pcapEngine.start();
 }
@@ -274,4 +286,23 @@ void HttpppMainWindow::httpHitsToCsvDialog() {
   if (filename.size()) {
     CsvWriter::write(_httpHitModel, filename);
   }
+}
+
+// LATER make counters more efficients (signals are too expensive for that...)
+void HttpppMainWindow::incrementPacketCounter() {
+  ++_packetCounter;
+  if (_packetCounter % 500 == 0)
+    ui->labelPacketCount->setText(QString::number(_packetCounter));
+}
+
+void HttpppMainWindow::incrementHitCounter() {
+  ++_hitCounter;
+  if (_hitCounter % 10 == 0)
+    ui->labelHitCount->setText(QString::number(_hitCounter));
+}
+
+void HttpppMainWindow::captureFinished() {
+  ui->labelPacketCount->setText(QString::number(_packetCounter));
+  ui->labelHitCount->setText(QString::number(_hitCounter));
+  ui->labelLoading->setVisible(false);
 }
