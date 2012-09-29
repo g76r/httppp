@@ -12,6 +12,7 @@
 #include "httphitmodel.h"
 #include <QSortFilterProxyModel>
 #include <QThread>
+#include "common/httpcustomfieldanalyzer.h"
 
 namespace Ui {
 class HttpppMainWindow;
@@ -21,12 +22,13 @@ class HttpppMainWindow : public QMainWindow {
   Q_OBJECT
 private:
   Ui::HttpppMainWindow *ui;
-  QThread _thread1;
+  QThread _thread1, _thread2;
   QPcapEngine *_pcapEngine;
   QPcapEthernetStack *_etherStack;
   QPcapIPv4Stack *_ipStack;
   QPcapTcpStack *_tcpStack;
   QPcapHttpStack *_httpStack;
+  HttpCustomFieldAnalyzer *_customFieldAnalyzer;
   TcpConversationModel _tcpConversationModel;
   TcpPacketModel _tcpPacketModel;
   HttpHitModel _httpHitModel;

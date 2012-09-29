@@ -29,7 +29,8 @@ SOURCES += \
     gui/httphitmodel.cpp \
     util/csvwriter.cpp \
     widget/multipixmapbutton.cpp \
-    gui/main-gui.cpp
+    gui/main-gui.cpp \
+    common/httpcustomfieldanalyzer.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
@@ -40,7 +41,8 @@ HEADERS += \
     gui/httphitmodel.h \
     util/csvwriter.h \
     widget/multipixmapbutton.h \
-    global.h
+    global.h \
+    common/httpcustomfieldanalyzer.h
 
 FORMS += \
     gui/httpppmainwindow.ui

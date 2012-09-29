@@ -39,6 +39,12 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   _httpStack = new QPcapHttpStack(0, _tcpStack);
   // tcp and http stacks must share same thread because of discardXXXBuffer
   _httpStack->moveToThread(_tcpStack->thread());
+  // custom field analyzer should have a separate thread because regex
+  // computation costs much cpu
+  // LATER make it possible to have several regex threads rather than only one
+  _customFieldAnalyzer = new HttpCustomFieldAnalyzer(0);
+  _customFieldAnalyzer->moveToThread(&_thread2);
+  _customFieldAnalyzer->connectToLowerStack(_httpStack);
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
   ui->tcpPacketsView->setModel(&_tcpPacketModel);
@@ -54,11 +60,12 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
           &_tcpPacketModel, SLOT(addTcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
   connect(_tcpStack, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
           &_tcpPacketModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
-  connect(_httpStack, SIGNAL(httpHit(QPcapHttpHit)),
+  connect(_customFieldAnalyzer, SIGNAL(httpHit(QPcapHttpHit)),
           &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
   connect(_httpStack, SIGNAL(hitsCountTick(ulong)),
           this, SLOT(updateHitsCount(ulong)));
   _thread1.start();
+  _thread2.start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
@@ -67,8 +74,11 @@ HttpppMainWindow::~HttpppMainWindow() {
   _ipStack->deleteLater();
   _etherStack->deleteLater();
   _pcapEngine->deleteLater();
+  _customFieldAnalyzer->deleteLater();
   _thread1.exit();
+  _thread2.exit();
   _thread1.wait(200);
+  _thread2.wait(200);
   qInstallMsgHandler(0);
   delete ui;
 }
@@ -83,17 +93,17 @@ void HttpppMainWindow::loadFile(QString filename) {
   _httpHitModel.clear();
   _tcpConversationProxyModel.clear();
   _httpHitProxyModel.clear();
-  _httpStack->clearFilters();
+  _customFieldAnalyzer->clearFilters();
   if (!ui->comboField1->currentText().isEmpty())
-    _httpStack->addFilter(
+    _customFieldAnalyzer->addFilter(
           ui->comboField1->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField1->currentIndex());
   if (!ui->comboField2->currentText().isEmpty())
-    _httpStack->addFilter(
+    _customFieldAnalyzer->addFilter(
           ui->comboField2->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField2->currentIndex());
   if (!ui->comboField3->currentText().isEmpty())
-    _httpStack->addFilter(
+    _customFieldAnalyzer->addFilter(
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
   ui->labelLoading->setVisible(true);
