@@ -8,5 +8,6 @@
 - copy packages in web site
 - revert version label commit
 - push libpcap and httppp repositories
+- also push version tags
 - update online web site (push and rebase)
 - publish new release on freshmeat^Wfreecode
