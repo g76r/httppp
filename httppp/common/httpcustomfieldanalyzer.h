@@ -60,7 +60,7 @@ signals:
 
 public slots:
   void rawHttpHit(QPcapHttpHit hit, QByteArray upstreamData,
-                  QByteArray donwstreamData);
+                  QByteArray downstreamData);
 };
 
 #endif // HTTPCUSTOMFIELDANALYZER_H

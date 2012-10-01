@@ -11,42 +11,48 @@ void HttpCustomFieldAnalyzer::connectToLowerStack(QPcapHttpStack *stack) {
 
 void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,
                                          QByteArray upstreamData,
-                                         QByteArray donwstreamData) {
+                                         QByteArray downstreamData) {
   //qDebug() << "looking for custom fields" << _filters.size();
-  QByteArray cookedUpstream, cookedDownstream;
-  for (int i = 0; i < upstreamData.size(); ++i) {
-    char ch = upstreamData.at(i);
-    if (ch < 32)
-      ch = ' ';
-    cookedUpstream.append(&ch, 1);
-  }
-  for (int i = 0; i < donwstreamData.size(); ++i) {
-    char ch = donwstreamData.at(i);
-    if (ch < 32)
-      ch = ' ';
-    cookedDownstream.append(&ch, 1);
-  }
-  for (int i = 0; i < _filters.size(); ++i) {
-    QPcapHttpFilter f = _filters[i];
-    QRegExp re = f.re();
-    //qDebug() << "testing upstream custom field" << i << f.direction()
-    //         << re.pattern() << cookedUpstream.size()
-    //         << cookedDownstream.size();
-    if ((f.direction() == QPcapHttpStack::Upstream
-         || f.direction() == QPcapHttpStack::Anystream)) {
-      if (re.indexIn(cookedUpstream.constData()) >= 0) {
-        //qDebug() << "found upstream custom field" << i
-        //         << re.cap(f.captureRank());
-        hit.setCustomField(i, re.cap(f.captureRank()));
-      }
+  if (_filters.size()) {
+    char cookedUpstream[upstreamData.size()+1];
+    char cookedDownstream[downstreamData.size()+1];
+    int i;
+    for (i = 0; i < upstreamData.size(); ++i) {
+      char ch = upstreamData.at(i);
+      if (ch < 32)
+        ch = ' ';
+      cookedUpstream[i] = ch;
     }
-    if ((f.direction() == QPcapHttpStack::Downstream
-         || f.direction() == QPcapHttpStack::Anystream)
-        && hit.customField(i).isNull()) {
-      if (re.indexIn(cookedDownstream.constData()) >= 0) {
-        //qDebug() << "found downstream custom field" << i
-        //         << re.cap(f.captureRank());
-        hit.setCustomField(i, re.cap(f.captureRank()));
+    cookedUpstream[i] = 0;
+    for (i = 0; i < downstreamData.size(); ++i) {
+      char ch = downstreamData.at(i);
+      if (ch < 32)
+        ch = ' ';
+      cookedDownstream[i] = ch;
+    }
+    cookedDownstream[i] = 0;
+    for (int i = 0; i < _filters.size(); ++i) {
+      QPcapHttpFilter f = _filters[i];
+      QRegExp re = f.re();
+      //qDebug() << "testing upstream custom field" << i << f.direction()
+      //         << re.pattern() << cookedUpstream.size()
+      //         << cookedDownstream.size();
+      if ((f.direction() == QPcapHttpStack::Upstream
+           || f.direction() == QPcapHttpStack::Anystream)) {
+        if (re.indexIn(cookedUpstream) >= 0) {
+          //qDebug() << "found upstream custom field" << i
+          //         << re.cap(f.captureRank());
+          hit.setCustomField(i, re.cap(f.captureRank()));
+        }
+      }
+      if ((f.direction() == QPcapHttpStack::Downstream
+           || f.direction() == QPcapHttpStack::Anystream)
+          && hit.customField(i).isNull()) {
+        if (re.indexIn(cookedDownstream) >= 0) {
+          //qDebug() << "found downstream custom field" << i
+          //         << re.cap(f.captureRank());
+          hit.setCustomField(i, re.cap(f.captureRank()));
+        }
       }
     }
   }
