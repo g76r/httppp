@@ -5,7 +5,7 @@
 
 TcpPacketModel::TcpPacketModel(QObject *parent)
   : QAbstractItemModel(parent),
-    _root(new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true)),
+    _root(new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true, 0)),
     _upstreamIcon(":/icons/red_up_arrow.svg"),
     _downstreamIcon(":/icons/blue_down_arrow.svg") {
 }
@@ -34,7 +34,7 @@ QModelIndex TcpPacketModel::parent(const QModelIndex &child) const {
   TreeItem *parentItem = childItem->_parent;
   if (parentItem == _root)
     return QModelIndex();
-  return createIndex(parentItem->row(), 0, parentItem);
+  return createIndex(parentItem->_row, 0, parentItem);
 }
 
 int TcpPacketModel::rowCount(const QModelIndex &parent) const {
@@ -110,32 +110,30 @@ void TcpPacketModel::addTcpDownstreamPacket(QPcapTcpPacket packet,
 void TcpPacketModel::addPacket(QPcapTcpConversation conversation,
                                QPcapTcpPacket packet, bool upstream) {
   //qDebug() << "addPacket" << packet;
-  emit beginResetModel(); // TODO optimize
-  TreeItem *parent;
-  foreach(TreeItem *i, _root->_children) {
-    if (i->_conversation == conversation) {
-      parent = i;
-      goto found;
-    }
+  TreeItem *parent = _conversationItemsById.value(conversation.id());
+  if (!parent) {
+    beginInsertRows(QModelIndex(), _root->_children.size(),
+                    _root->_children.size());
+    parent = new TreeItem(_root, QPcapTcpPacket(), conversation, false,
+                          _root->_children.size());
+    _conversationItemsById.insert(conversation.id(), parent);
+    _root->_children.append(parent);
+    endInsertRows();
   }
-  parent = new TreeItem(_root, QPcapTcpPacket(), conversation, false);
-  _root->_children.append(parent);
-found:
-  parent->_children.append(new TreeItem(parent, packet, conversation, upstream));
-  conversation.packets().append(packet);
-  emit endResetModel();
+  beginInsertRows(createIndex(parent->_row, 0, parent),
+                  parent->_children.size(), parent->_children.size());
+  parent->_children.append(new TreeItem(parent, packet, conversation,
+                                        upstream, parent->_children.size()));
+  endInsertRows();
 }
 
 QModelIndex TcpPacketModel::index(QPcapTcpConversation conversation) const {
-  for (int i = 0; i < _root->_children.size(); ++ i) {
-    TreeItem *ti = _root->_children.at(i);
-    if (ti && ti->_conversation == conversation)
-      return createIndex(i, 0, ti);
-  }
-  return QModelIndex();
+  TreeItem *ti = _conversationItemsById.value(conversation.id());
+  return ti ? createIndex(ti->_row, 0, ti) : QModelIndex();
 }
 
 QModelIndex TcpPacketModel::index(QPcapTcpPacket packet) const {
+  // TODO optimize, this may need to set conversation reference in the tcp packet (rather than http), which is anyway more logical
   for (int i = 0; i < _root->_children.size(); ++i) {
     TreeItem *ti = _root->_children.at(i);
     for (int j = 0; j < ti->_children.size(); ++j) {
@@ -170,8 +168,9 @@ void TcpPacketModel::clear() {
   emit beginResetModel();
   //emit beginRemoveRows(QModelIndex(), 0, _root->_children.size()-1);
   //_root->_children.clear();
+  _conversationItemsById.clear();
   delete _root;
-  _root = new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true);
+  _root = new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true, 0);
   //emit endRemoveRows();
   emit endResetModel();
 }

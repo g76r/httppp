@@ -19,16 +19,14 @@ private:
       * for conversations.
       */
     bool _upstreamFinished;
+    int _row;
 
     TreeItem(TreeItem *parent, QPcapTcpPacket packet,
-             QPcapTcpConversation conversation, bool upstream)
+             QPcapTcpConversation conversation, bool upstream, int row)
       : _parent(parent), _packet(packet), _conversation(conversation),
-        _upstreamFinished(upstream) { }
+        _upstreamFinished(upstream), _row(row) { }
     ~TreeItem() {
       qDeleteAll(_children);
-    }
-    int row() /*const*/ {
-      return _parent ? _parent->_children.indexOf(this) : 0;
     }
 
   private:
@@ -36,6 +34,7 @@ private:
   };
 
   TreeItem* _root;
+  QHash<quint64,TreeItem*> _conversationItemsById;
   QIcon _upstreamIcon, _downstreamIcon;
 
 public:
