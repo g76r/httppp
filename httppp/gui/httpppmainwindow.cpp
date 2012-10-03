@@ -31,11 +31,15 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   // balanced in the engine thread than the tcp/http one
   // more than 3 threads (engine + tcp/http + main/gui/models) have been
   // tested to be less efficient on a 2 cores 4 threads Core i5 PC with SSD
+#ifndef QT_DEBUG
   _etherStack->moveToThread(_pcapEngine->thread());
+#endif
   _ipStack = new QPcapIPv4Stack(0, _etherStack);
   _ipStack->moveToThread(_pcapEngine->thread());
   _tcpStack = new QPcapTcpStack(0, _ipStack);
+#ifndef QT_DEBUG
   _tcpStack->moveToThread(&_thread1);
+#endif
   _httpStack = new QPcapHttpStack(0, _tcpStack);
   // tcp and http stacks must share same thread because of discardXXXBuffer
   _httpStack->moveToThread(_tcpStack->thread());
@@ -43,7 +47,9 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   // computation costs much cpu
   // LATER make it possible to have several regex threads rather than only one
   _customFieldAnalyzer = new HttpCustomFieldAnalyzer(0);
+#ifndef QT_DEBUG
   _customFieldAnalyzer->moveToThread(&_thread2);
+#endif
   _customFieldAnalyzer->connectToLowerStack(_httpStack);
   _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
   ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
@@ -53,7 +59,7 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   connect(_pcapEngine, SIGNAL(packetsCountTick(ulong)),
           this, SLOT(updatePacketsCount(ulong)));
   connect(_httpStack, SIGNAL(captureFinished()),
-          this, SLOT(captureFinished()));
+          this, SLOT(captureFinished())); // FIXME
   connect(_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
           &_tcpConversationModel, SLOT(addConversation(QPcapTcpConversation)));
   connect(_tcpStack, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
