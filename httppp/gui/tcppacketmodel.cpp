@@ -127,6 +127,14 @@ void TcpPacketModel::addPacket(QPcapTcpConversation conversation,
   endInsertRows();
 }
 
+bool TcpPacketModel::hasChildren(const QModelIndex &parent) const {
+  if (!parent.isValid())
+    return true;
+  if (parent.internalPointer())
+    return ((TreeItem*)parent.internalPointer())->_parent == _root;
+  return false; // this should not occur
+}
+
 QModelIndex TcpPacketModel::index(QPcapTcpConversation conversation) const {
   TreeItem *ti = _conversationItemsById.value(conversation.id());
   return ti ? createIndex(ti->_row, 0, ti) : QModelIndex();

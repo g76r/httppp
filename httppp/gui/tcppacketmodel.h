@@ -57,6 +57,7 @@ public:
     */
   QPcapTcpConversation conversation(const QModelIndex &index) const;
   void clear();
+  bool hasChildren(const QModelIndex &parent) const;
 
 signals:
   
