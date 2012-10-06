@@ -27,27 +27,27 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/updown.svg");
   _pcapEngine = new QPcapEngine;
   _etherStack = new QPcapEthernetStack(0, _pcapEngine);
+#ifndef MONOTHREAD_PROFILING
   // ethernet and ip stacks are almost straightforward and therefore more
   // balanced in the engine thread than the tcp/http one
   // more than 3 threads (engine + tcp/http + main/gui/models) have been
   // tested to be less efficient on a 2 cores 4 threads Core i5 PC with SSD
-#ifndef QT_DEBUG
   _etherStack->moveToThread(_pcapEngine->thread());
 #endif
   _ipStack = new QPcapIPv4Stack(0, _etherStack);
   _ipStack->moveToThread(_pcapEngine->thread());
   _tcpStack = new QPcapTcpStack(0, _ipStack);
-#ifndef QT_DEBUG
+#ifndef MONOTHREAD_PROFILING
   _tcpStack->moveToThread(&_thread1);
 #endif
   _httpStack = new QPcapHttpStack(0, _tcpStack);
   // tcp and http stacks must share same thread because of discardXXXBuffer
   _httpStack->moveToThread(_tcpStack->thread());
-  // custom field analyzer should have a separate thread because regex
-  // computation costs much cpu
-  // LATER make it possible to have several regex threads rather than only one
   _customFieldAnalyzer = new HttpCustomFieldAnalyzer(0);
-#ifndef QT_DEBUG
+#ifndef MONOTHREAD_PROFILING
+  // custom field analyzer has a separate thread because regex computation costs
+  // much cpu
+  // LATER make it possible to have several regex threads rather than only one
   _customFieldAnalyzer->moveToThread(&_thread2);
 #endif
   _customFieldAnalyzer->connectToLowerStack(_httpStack);

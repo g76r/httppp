@@ -4,7 +4,7 @@ CONFIG += largefile
 
 QMAKE_CXXFLAGS += -Wextra
 win32:QMAKE_RPATHDIR = # no rpath in linking
-QMAKE_CXXFLAGS_DEBUG += -pg -fno-default-inline -fno-inline
+QMAKE_CXXFLAGS_DEBUG += -pg -fno-default-inline -fno-inline -DMONOTHREAD_PROFILING
 QMAKE_LFLAGS_DEBUG += -pg
 
 INCLUDEPATH += ../libqpcap
