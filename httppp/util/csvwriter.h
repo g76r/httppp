@@ -6,7 +6,7 @@
 
 class CsvWriter {
 public:
-  static void write(QAbstractItemModel &model, QString filename);
+  static void write(QAbstractItemModel *model, QString filename);
 };
 
 #endif // CSVWRITER_H

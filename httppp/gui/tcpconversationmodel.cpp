@@ -1,48 +1,34 @@
 #include "tcpconversationmodel.h"
+#include "tcpdata.h"
 
 #define COLUMNS 3
 
-TcpConversationModel::TcpConversationModel(QObject *parent)
-  : QAbstractItemModel(parent) {
-}
-
-void TcpConversationModel::addConversation(QPcapTcpConversation conversation) {
-  emit beginInsertRows(QModelIndex(), _list.size(), _list.size());
-  _list.append(conversation);
-  emit endInsertRows();
-}
-
-void TcpConversationModel::setConversationFinished(
-    QPcapTcpConversation conversation) {
-  Q_UNUSED(conversation);
-  // LATER may do something such as changing conversation color
+TcpConversationModel::TcpConversationModel(QObject *parent, TcpData *data)
+  : QAbstractItemModel(parent), _data(data), _conversationsCount(0) {
+  connect(data, SIGNAL(dataReset()), this, SLOT(dataReset()));
+  connect(data, SIGNAL(hasMoreConversations()),
+          this, SLOT(fetchMoreConversations()));
 }
 
 QModelIndex TcpConversationModel::index(int row, int column,
                                         const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  if (row < 0 || row >= _list.size())
+  if (parent.isValid())
     return QModelIndex();
-  return createIndex(row, column, (quint32)_list.at(row).id());  // LATER fix 32/64 inconsistency
+  if (row < 0 || row >= _conversationsCount)
+    return QModelIndex();
+  return createIndex(row, column, (quint32)_data->conversationAt(row).id());
 }
 
 QModelIndex TcpConversationModel::index(QPcapTcpConversation
                                         conversation) const {
-  for (int i = 0; i < _list.size(); ++i) {
-    const QPcapTcpConversation &c = _list.at(i);
-    if (c == conversation)
-      return createIndex(i, 0, (quint32)c.id()); // LATER fix 32/64 inconsistency
-  }
-  return QModelIndex();
+  int row = _data->conversationIndexById(conversation.id());
+  return row >= 0 ? index(row, 0, QModelIndex()) : QModelIndex();
 }
 
 QPcapTcpConversation TcpConversationModel::conversation(
     const QModelIndex &index) const {
-  foreach (QPcapTcpConversation c, _list) {
-    if (c.id() == (quint64)index.internalId()) // LATER fix 32/64 inconsistency
-      return c;
-  }
-  return QPcapTcpConversation();
+  return index.isValid() ? _data->conversationAt(index.row())
+                         : QPcapTcpConversation();
 }
 
 QModelIndex TcpConversationModel::parent(const QModelIndex &child) const {
@@ -51,8 +37,7 @@ QModelIndex TcpConversationModel::parent(const QModelIndex &child) const {
 }
 
 int TcpConversationModel::rowCount(const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  return _list.size();
+  return parent.isValid() ? 0 : _conversationsCount;
 }
 
 int TcpConversationModel::columnCount(const QModelIndex &parent) const {
@@ -63,18 +48,16 @@ int TcpConversationModel::columnCount(const QModelIndex &parent) const {
 QVariant TcpConversationModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid())
     return QVariant();
-  if (index.row() < 0 || index.row() >= _list.size() || index.column() < 0
-       || index.column() >= COLUMNS)
-    return QVariant();
+  QPcapTcpConversation c = _data->conversationAt(index.row());
   switch (role) {
   case Qt::DisplayRole: {
     switch(index.column()) {
     case 0:
-      return _list.at(index.row()).id();
+      return c.id();
     case 1:
-      return _list.at(index.row()).firstPacket().src();
+      return c.firstPacket().src();
     case 2:
-      return _list.at(index.row()).firstPacket().dst();
+      return c.firstPacket().dst();
     }
   }
   default:
@@ -106,8 +89,33 @@ QVariant TcpConversationModel::headerData(
   return QVariant();
 }
 
-void TcpConversationModel::clear() {
-  emit beginRemoveRows(QModelIndex(), 0, _list.size()-1);
-  _list.clear();
-  emit endRemoveRows();
+bool TcpConversationModel::hasChildren(const QModelIndex &parent) const {
+  return !parent.isValid();
+}
+
+bool TcpConversationModel::canFetchMore(const QModelIndex &parent) const {
+  return !parent.isValid() && _conversationsCount < _data->conversationsCount();
+}
+
+void TcpConversationModel::fetchMore(const QModelIndex &parent) {
+  Q_UNUSED(parent);
+  int n = _data->conversationsCount() - _conversationsCount;
+  if (n > 0) {
+    beginInsertRows(QModelIndex(), _conversationsCount,
+                    _conversationsCount+n-1);
+    _conversationsCount += n;
+    endInsertRows();
+  }
+}
+
+void TcpConversationModel::dataReset() {
+  if (_conversationsCount) {
+    beginRemoveRows(QModelIndex(), 0, _conversationsCount-1);
+    _conversationsCount = 0;
+    endRemoveRows();
+  }
+}
+
+void TcpConversationModel::fetchMoreConversations() {
+  fetchMore(QModelIndex());
 }

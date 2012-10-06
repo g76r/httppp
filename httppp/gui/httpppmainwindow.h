@@ -13,6 +13,8 @@
 #include <QSortFilterProxyModel>
 #include <QThread>
 #include "common/httpcustomfieldanalyzer.h"
+#include "tcpdata.h"
+#include "httpdata.h"
 
 namespace Ui {
 class HttpppMainWindow;
@@ -22,17 +24,19 @@ class HttpppMainWindow : public QMainWindow {
   Q_OBJECT
 private:
   Ui::HttpppMainWindow *ui;
-  QThread _thread1, _thread2;
+  QThread *_tcpHttpThread, *_regexThread;
   QPcapEngine *_pcapEngine;
   QPcapEthernetStack *_etherStack;
   QPcapIPv4Stack *_ipStack;
   QPcapTcpStack *_tcpStack;
   QPcapHttpStack *_httpStack;
   HttpCustomFieldAnalyzer *_customFieldAnalyzer;
-  TcpConversationModel _tcpConversationModel;
-  TcpPacketModel _tcpPacketModel;
-  HttpHitModel _httpHitModel;
-  QSortFilterProxyModel _tcpConversationProxyModel, _httpHitProxyModel;
+  TcpData *_tcpData;
+  TcpConversationModel *_tcpConversationModel;
+  TcpPacketModel *_tcpPacketModel;
+  HttpData *_httpData;
+  HttpHitModel *_httpHitModel;
+  QSortFilterProxyModel *_tcpConversationProxyModel, *_httpHitProxyModel;
   QString _lastLoadedFilename;
   bool _firstShow;
 

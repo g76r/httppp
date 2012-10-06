@@ -1,91 +1,108 @@
 #include "httphitmodel.h"
 #include <QDateTime>
+#include "qpcaphttphit.h"
+#include "httpdata.h"
 
 #define COLUMNS 21
 
-HttpHitModel::HttpHitModel(QObject *parent) : QAbstractItemModel(parent) {
+HttpHitModel::HttpHitModel(QObject *parent, HttpData *data)
+  : QAbstractItemModel(parent), _data(data), _hitsCount(0) {
+  connect(data, SIGNAL(dataReset()), this, SLOT(dataReset()));
+  connect(data, SIGNAL(hasMoreHits()), this, SLOT(fetchMoreHits()));
 }
 
 QModelIndex HttpHitModel::index(int row, int column,
                                 const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  if (row < 0 || row >= _list.size())
+  Q_UNUSED(parent)
+  if (row < 0 || row >= _hitsCount)
     return QModelIndex();
   return createIndex(row, column, 0);
 }
 
 QModelIndex HttpHitModel::parent(const QModelIndex &child) const {
-  Q_UNUSED(child);
+  Q_UNUSED(child)
   return QModelIndex();
 }
 
 int HttpHitModel::rowCount(const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  return _list.size();
+  Q_UNUSED(parent)
+  return _hitsCount;
 }
 
 int HttpHitModel::columnCount(const QModelIndex &parent) const {
-  Q_UNUSED(parent);
+  Q_UNUSED(parent)
   return COLUMNS;
+}
+
+bool HttpHitModel::canFetchMore(const QModelIndex &parent) const {
+  Q_UNUSED(parent)
+  return _hitsCount < _data->hitsCount();
+}
+
+void HttpHitModel::fetchMore(const QModelIndex &parent) {
+  Q_UNUSED(parent)
+  int n = _data->hitsCount() - _hitsCount;
+  if (n > 0) {
+    beginInsertRows(QModelIndex(), _hitsCount, _hitsCount+n-1);
+    _hitsCount += n;
+    endInsertRows();
+  }
 }
 
 QVariant HttpHitModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid())
     return QVariant();
-  if (index.row() < 0 || index.row() >= _list.size() || index.column() < 0
-       || index.column() >= COLUMNS)
+  QPcapHttpHit hit = _data->hitAt(index.row());
+  if (!hit.isValid())
     return QVariant();
   switch (role) {
-  case Qt::DisplayRole: {
+  case Qt::DisplayRole:
     switch(index.column()) {
     case 0:
-      return _list.at(index.row()).conversation().id();
+      return hit.conversation().id();
     case 1:
-      return _list.at(index.row()).methodAsString();
+      return hit.methodAsString();
     case 2:
-      return _list.at(index.row()).host();
+      return hit.host();
     case 3:
-      return _list.at(index.row()).path();
+      return hit.path();
     case 4:
-      return _list.at(index.row()).firstRequestPacket().src();
+      return hit.firstRequestPacket().src();
     case 5:
-      return _list.at(index.row()).firstRequestPacket().dst();
+      return hit.firstRequestPacket().dst();
     case 6:
-      return _list.at(index.row()).firstRequestPacket().ip().src();
+      return hit.firstRequestPacket().ip().src();
     case 7:
-      return _list.at(index.row()).firstRequestPacket().ip().dst();
+      return hit.firstRequestPacket().ip().dst();
     case 8:
-      return _list.at(index.row()).firstRequestPacket().srcPort();
+      return hit.firstRequestPacket().srcPort();
     case 9:
-      return _list.at(index.row()).firstRequestPacket().dstPort();
+      return hit.firstRequestPacket().dstPort();
     case 10:
-      return _list.at(index.row()).protocol();
+      return hit.protocol();
     case 11:
-      return QDateTime::fromMSecsSinceEpoch(
-            _list.at(index.row()).requestTimestamp()/1000)
+      return QDateTime::fromMSecsSinceEpoch(hit.requestTimestamp()/1000)
           .toString("yyyy-MM-dd");
     case 12:
-      return QDateTime::fromMSecsSinceEpoch(
-            _list.at(index.row()).requestTimestamp()/1000)
+      return QDateTime::fromMSecsSinceEpoch(hit.requestTimestamp()/1000)
           .toString("hh:mm:ss");
     case 13:
-      return _list.at(index.row()).requestTimestamp()%1000000;
+      return hit.requestTimestamp()%1000000;
     case 14:
-      return _list.at(index.row()).requestTimestamp();
+      return hit.requestTimestamp();
     case 15:
-      return _list.at(index.row()).usecToFirstByte();
+      return hit.usecToFirstByte();
     case 16:
-      return _list.at(index.row()).usecToLastByte();
+      return hit.usecToLastByte();
     case 17:
-      return _list.at(index.row()).returnCode();
+      return hit.returnCode();
     case 18:
-      return _list.at(index.row()).customField(0);
+      return hit.customField(0);
     case 19:
-      return _list.at(index.row()).customField(1);
+      return hit.customField(1);
     case 20:
-      return _list.at(index.row()).customField(2);
+      return hit.customField(2);
     }
-  }
   default:
     ;
   }
@@ -150,20 +167,17 @@ QVariant HttpHitModel::headerData(int section, Qt::Orientation orientation,
 }
 
 QPcapHttpHit HttpHitModel::hit(const QModelIndex &index) const {
-  if (!index.isValid() || index.row() < 0 || index.row() >= _list.size())
-    return QPcapHttpHit();
-  return _list.at(index.row());
+  return index.isValid() ? _data->hitAt(index.row()) : QPcapHttpHit();
 }
 
-void HttpHitModel::clear() {
-  emit beginResetModel();
-  _list.clear();
-  emit endResetModel();
+void HttpHitModel::dataReset() {
+  if (_hitsCount) {
+    emit beginRemoveRows(QModelIndex(), 0, _hitsCount-1);
+    _hitsCount = 0;
+    emit endRemoveRows();
+  }
 }
 
-void HttpHitModel::addHit(QPcapHttpHit hit) {
-  //qDebug() << "addHit" << hit.conversation().id();
-  emit beginInsertRows(QModelIndex(), _list.size(), _list.size());
-  _list.append(hit);
-  emit endInsertRows();
+void HttpHitModel::fetchMoreHits() {
+  fetchMore(QModelIndex());
 }

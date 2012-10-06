@@ -27,64 +27,77 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/updown.svg");
   _pcapEngine = new QPcapEngine;
   _etherStack = new QPcapEthernetStack(0, _pcapEngine);
+  _tcpHttpThread = new QThread(this);
+  _regexThread = new QThread(this);
+  _ipStack = new QPcapIPv4Stack(0, _etherStack);
 #ifndef MONOTHREAD_PROFILING
   // ethernet and ip stacks are almost straightforward and therefore more
   // balanced in the engine thread than the tcp/http one
-  // more than 3 threads (engine + tcp/http + main/gui/models) have been
-  // tested to be less efficient on a 2 cores 4 threads Core i5 PC with SSD
   _etherStack->moveToThread(_pcapEngine->thread());
-#endif
-  _ipStack = new QPcapIPv4Stack(0, _etherStack);
   _ipStack->moveToThread(_pcapEngine->thread());
-  _tcpStack = new QPcapTcpStack(0, _ipStack);
-#ifndef MONOTHREAD_PROFILING
-  _tcpStack->moveToThread(&_thread1);
 #endif
+  _tcpStack = new QPcapTcpStack(0, _ipStack);
   _httpStack = new QPcapHttpStack(0, _tcpStack);
+#ifndef MONOTHREAD_PROFILING
   // tcp and http stacks must share same thread because of discardXXXBuffer
+  _tcpStack->moveToThread(_tcpHttpThread);
   _httpStack->moveToThread(_tcpStack->thread());
+#endif
   _customFieldAnalyzer = new HttpCustomFieldAnalyzer(0);
+  _customFieldAnalyzer->connectToSource(_httpStack);
 #ifndef MONOTHREAD_PROFILING
   // custom field analyzer has a separate thread because regex computation costs
   // much cpu
-  // LATER make it possible to have several regex threads rather than only one
-  _customFieldAnalyzer->moveToThread(&_thread2);
+  // FIXME make it possible to have several regex threads rather than only one
+  _customFieldAnalyzer->moveToThread(_regexThread);
 #endif
-  _customFieldAnalyzer->connectToLowerStack(_httpStack);
-  _tcpConversationProxyModel.setSourceModel(&_tcpConversationModel);
-  ui->tcpConversationsView->setModel(&_tcpConversationProxyModel);
-  ui->tcpPacketsView->setModel(&_tcpPacketModel);
-  _httpHitProxyModel.setSourceModel(&_httpHitModel);
-  ui->httpHitsView->setModel(&_httpHitProxyModel);
+  _tcpData = new TcpData(0);
+  _httpData = new HttpData(0);
+  _tcpData->connectToSource(_tcpStack);
+  _httpData->connectToSource(_customFieldAnalyzer);
+#ifndef MONOTHREAD_PROFILING
+  // data object may be in a thread distinct from http and tcp stacks analysis
+  // however it has been tested less performant (both longer and mor memory
+  // consuming) on a 4 ways 2.6 GHz computer (1 × i7 × 2 cores × 2 threads)
+  _tcpData->moveToThread(_tcpHttpThread);
+  _httpData->moveToThread(_tcpHttpThread);
+#endif
+  _tcpConversationProxyModel = new QSortFilterProxyModel(this);
+  _tcpConversationProxyModel->setSourceModel(
+        _tcpConversationModel = new TcpConversationModel(this, _tcpData));
+  ui->tcpConversationsView->setModel(_tcpConversationProxyModel);
+  ui->tcpPacketsView->setModel(
+        _tcpPacketModel = new TcpPacketModel(this, _tcpData));
+  _httpHitProxyModel = new QSortFilterProxyModel(this);
+  _httpHitProxyModel->setSourceModel(
+        _httpHitModel = new HttpHitModel(this, _httpData));
+  ui->httpHitsView->setModel(_httpHitProxyModel);
   connect(_pcapEngine, SIGNAL(packetsCountTick(ulong)),
           this, SLOT(updatePacketsCount(ulong)));
-  connect(_httpStack, SIGNAL(captureFinished()),
-          this, SLOT(captureFinished())); // FIXME
-  connect(_tcpStack, SIGNAL(conversationStarted(QPcapTcpConversation)),
-          &_tcpConversationModel, SLOT(addConversation(QPcapTcpConversation)));
-  connect(_tcpStack, SIGNAL(tcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
-          &_tcpPacketModel, SLOT(addTcpUpstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
-  connect(_tcpStack, SIGNAL(tcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)),
-          &_tcpPacketModel, SLOT(addTcpDownstreamPacket(QPcapTcpPacket,QPcapTcpConversation)));
-  connect(_customFieldAnalyzer, SIGNAL(httpHit(QPcapHttpHit)),
-          &_httpHitModel, SLOT(addHit(QPcapHttpHit)));
   connect(_httpStack, SIGNAL(hitsCountTick(ulong)),
           this, SLOT(updateHitsCount(ulong)));
-  _thread1.start();
-  _thread2.start();
+  connect(_httpData, SIGNAL(captureFinished()),
+          this, SLOT(captureFinished())); // FIXME
+  _tcpHttpThread->start();
+  _regexThread->start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
-  _httpStack->deleteLater();
+  /*_httpStack->deleteLater();
   _tcpStack->deleteLater();
   _ipStack->deleteLater();
   _etherStack->deleteLater();
   _pcapEngine->deleteLater();
   _customFieldAnalyzer->deleteLater();
-  _thread1.exit();
-  _thread2.exit();
-  _thread1.wait(200);
-  _thread2.wait(200);
+  _tcpData->deleteLater();
+  // LATER ensure that objects are deleted, currently they are probably not
+  // because deleteLater is likely not to work since threads are exited
+  // immediatly
+  _tcpHttpThread->exit();
+  _regexThread->exit();
+  _tcpHttpThread->wait(200);
+  _regexThread->wait(200);*/
+  // FIXME
   qInstallMsgHandler(0);
   delete ui;
 }
@@ -94,11 +107,8 @@ void HttpppMainWindow::loadFile(QString filename) {
     qDebug() << "cannot load file when pcap engine is already running";
     return;
   }
-  _tcpConversationModel.clear();
-  _tcpPacketModel.clear();
-  _httpHitModel.clear();
-  _tcpConversationProxyModel.clear();
-  _httpHitProxyModel.clear();
+  _tcpData->clear();
+  _httpData->clear();
   _customFieldAnalyzer->clearFilters();
   if (!ui->comboField1->currentText().isEmpty())
     _customFieldAnalyzer->addFilter(
@@ -114,7 +124,6 @@ void HttpppMainWindow::loadFile(QString filename) {
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
   ui->labelLoading->setVisible(true);
   _pcapEngine->loadFile(filename);
-  _pcapEngine->start();
 }
 
 void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
@@ -178,14 +187,14 @@ void HttpppMainWindow::toggleMessagesPanel() {
 void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
   if (sender() == ui->tcpConversationsView) {
     //qDebug() << "forwardSelection from TCP conv";
-    QPcapTcpConversation c = _tcpConversationModel.conversation(
-          _tcpConversationProxyModel.mapToSource(currentIndex));
+    QPcapTcpConversation c = _tcpConversationModel->conversation(
+          _tcpConversationProxyModel->mapToSource(currentIndex));
     selectConversationInPackets(c);
     showDetails(c);
   } else if (sender() == ui->tcpPacketsView) {
     //qDebug() << "forwardSelection from TCP packets";
-    QPcapTcpPacket p = _tcpPacketModel.packet(currentIndex);
-    QPcapTcpConversation c = _tcpPacketModel.conversation(currentIndex);
+    QPcapTcpPacket p = _tcpPacketModel->packet(currentIndex);
+    QPcapTcpConversation c = _tcpPacketModel->conversation(currentIndex);
     selectConversationInConversations(c);
     //qDebug() << "sender = tcpPacketView" << p.isNull() << p << c;
     if (p.isNull())
@@ -193,8 +202,8 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
     else
       showDetails(c, p);
   } else if (sender() == ui->httpHitsView) {
-    QPcapHttpHit hit = _httpHitModel.hit(
-          _httpHitProxyModel.mapToSource(currentIndex));
+    QPcapHttpHit hit = _httpHitModel->hit(
+          _httpHitProxyModel->mapToSource(currentIndex));
     selectConversationInConversations(hit.conversation());
     selectPacketInPackets(hit.firstRequestPacket());
     // LATER should display all packets in HTTP hit rather than first one
@@ -207,12 +216,12 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
 void HttpppMainWindow::selectConversationInConversations(
     QPcapTcpConversation conversation) {
   if (ui->tcpConversationsView->isVisible()) {
-    QModelIndex i = _tcpConversationModel.index(conversation);
+    QModelIndex i = _tcpConversationModel->index(conversation);
     if (i.isValid()) {
       ui->tcpConversationsView->scrollTo(
-            _tcpConversationProxyModel.mapFromSource(i));
+            _tcpConversationProxyModel->mapFromSource(i));
       ui->tcpConversationsView->selectRow(
-            _tcpConversationProxyModel.mapFromSource(i).row());
+            _tcpConversationProxyModel->mapFromSource(i).row());
     }
   }
 }
@@ -220,7 +229,7 @@ void HttpppMainWindow::selectConversationInConversations(
 void HttpppMainWindow::selectConversationInPackets(
     QPcapTcpConversation conversation) {
   if (ui->tcpPacketsView->isVisible()) {
-    QModelIndex i = _tcpPacketModel.index(conversation);
+    QModelIndex i = _tcpPacketModel->index(conversation);
     ui->tcpPacketsView->scrollTo(i);
     QItemSelectionModel *sm = ui->tcpPacketsView->selectionModel();
     if (sm) {
@@ -235,8 +244,8 @@ void HttpppMainWindow::selectConversationInPackets(
 
 void HttpppMainWindow::selectPacketInPackets(QPcapTcpPacket packet) {
   if (ui->tcpPacketsView->isVisible()) {
-    QModelIndex i = _tcpPacketModel.index(packet);
-    ui->tcpPacketsView->setExpanded(_tcpPacketModel.parent(i), true);
+    QModelIndex i = _tcpPacketModel->index(packet);
+    ui->tcpPacketsView->setExpanded(_tcpPacketModel->parent(i), true);
     ui->tcpPacketsView->scrollTo(i);
     QItemSelectionModel *sm = ui->tcpPacketsView->selectionModel();
     if (sm) {

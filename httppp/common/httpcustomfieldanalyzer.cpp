@@ -4,9 +4,10 @@ HttpCustomFieldAnalyzer::HttpCustomFieldAnalyzer(QObject *parent)
   : QObject(parent) {
 }
 
-void HttpCustomFieldAnalyzer::connectToLowerStack(QPcapHttpStack *stack) {
+void HttpCustomFieldAnalyzer::connectToSource(QPcapHttpStack *stack) {
   connect(stack, SIGNAL(httpHit(QPcapHttpHit,QByteArray,QByteArray)),
           this, SLOT(rawHttpHit(QPcapHttpHit,QByteArray,QByteArray)));
+  connect(stack, SIGNAL(captureFinished()), this, SIGNAL(captureFinished()));
 }
 
 void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,

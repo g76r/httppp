@@ -2,45 +2,54 @@
 #include <QBrush>
 
 #define COLUMNS 1
+#define PACKET_FLAG 0x80000000
 
-TcpPacketModel::TcpPacketModel(QObject *parent)
-  : QAbstractItemModel(parent),
-    _root(new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true, 0)),
+TcpPacketModel::TcpPacketModel(QObject *parent, TcpData *data)
+  : QAbstractItemModel(parent), _data(data),
     _upstreamIcon(":/icons/red_up_arrow.svg"),
-    _downstreamIcon(":/icons/blue_down_arrow.svg") {
-}
-
-TcpPacketModel::~TcpPacketModel() {
-  delete _root;
+    _downstreamIcon(":/icons/blue_down_arrow.svg"), _conversationsCount(0) {
+  connect(data, SIGNAL(dataReset()), this, SLOT(dataReset()));
+  connect(data, SIGNAL(hasMoreConversations()),
+          this, SLOT(fetchMoreConversations()));
 }
 
 QModelIndex TcpPacketModel::index(int row, int column,
                                   const QModelIndex &parent) const {
   Q_UNUSED(column);
-  if (row < 0)
-    return QModelIndex();
-  const QList<TreeItem*> *list = parent.isValid()
-      ? &static_cast<TreeItem*>(parent.internalPointer())->_children
-      : &_root->_children;
-  if (row >= list->size())
-    return QModelIndex();
-  return createIndex(row, 0, list->at(row));
+  if (parent.isValid()) {
+    quint32 id = parent.internalId();
+    if (id & PACKET_FLAG)
+      return QModelIndex(); // packets have no children
+    QModelIndex i = createIndex(row, 0, id | PACKET_FLAG);
+    //qDebug() << "index packet" << id << i.internalId() << row;
+    return i;
+  }
+  QPcapTcpConversation c = _data->conversationAt(row);
+  //if (c.isNull())
+  //  return QModelIndex();
+  QModelIndex i = createIndex(row, 0, (quint32)c.id());
+  //qDebug() << "index conv" << i.internalId() << row;
+  return i;
 }
 
 QModelIndex TcpPacketModel::parent(const QModelIndex &child) const {
   if (!child.isValid())
     return QModelIndex();
-  TreeItem *childItem = static_cast<TreeItem*>(child.internalPointer());
-  TreeItem *parentItem = childItem->_parent;
-  if (parentItem == _root)
-    return QModelIndex();
-  return createIndex(parentItem->_row, 0, parentItem);
+  quint32 id = child.internalId();
+  if (id & PACKET_FLAG) {
+    id &= ~PACKET_FLAG;
+    int index = _data->conversationIndexById(id);
+    if (index >= 0)
+      return createIndex(index, 0, id);
+  }
+  return QModelIndex();
 }
 
 int TcpPacketModel::rowCount(const QModelIndex &parent) const {
   if (!parent.isValid())
-    return _root->_children.size();
-  return static_cast<TreeItem*>(parent.internalPointer())->_children.size();
+    return _conversationsCount;
+  quint32 id = parent.internalId();
+  return (id & PACKET_FLAG) ? 0 : _packetsCount.value(id);
 }
 
 int TcpPacketModel::columnCount(const QModelIndex &parent) const {
@@ -51,36 +60,40 @@ int TcpPacketModel::columnCount(const QModelIndex &parent) const {
 QVariant TcpPacketModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid())
     return QVariant();
-  TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-  if (!item || !item->_parent )
+  //qDebug() << "data" << index.internalId();
+  quint32 id = index.internalId();
+  int conversationIndex = _data->conversationIndexById(id & ~PACKET_FLAG);
+  if (conversationIndex < 0)
     return QVariant();
-  if (!item->_packet.isNull()) {
+  if (id & PACKET_FLAG) {
+    QPcapTcpPacket packet = _data->packetAt(conversationIndex, index.row());
+    //qDebug() << "data for packet" << (id & ~PACKET_FLAG) << index.row()
+    //         << packet.id() << "role" << role << index.column();
     switch (role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
     case Qt::ToolTipRole:
-      if (index.column() < 0 || index.column() >= COLUMNS)
-        return QVariant();
       switch (index.column()) {
       case 0:
-        return item->_packet.toShortText();
+        return packet.toShortText();
       }
       break;
     case Qt::DecorationRole:
-      if (!item->_packet.isNull())
-       return (item->_conversation.matchesSameStream(item->_packet))
-           ? _upstreamIcon : _downstreamIcon;
+      return packet.upstream() ? _upstreamIcon : _downstreamIcon;
       break;
     case Qt::ForegroundRole:
-      return QBrush(item->_upstreamFinished ? QColor(255, 0, 0)
-                                    : QColor(0, 0, 255));
+      return QBrush(packet.upstream() ? QColor(255, 0, 0) : QColor(0, 0, 255));
     }
-  } else  if (!item->_conversation.isNull()) {
+  } else {
+    QPcapTcpConversation conversation
+        = _data->conversationAt(conversationIndex);
+    //qDebug() << "data for conversation" << (id&~PACKET_FLAG) << index.row()
+    //<< conversation.id();
     switch (role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
     case Qt::ToolTipRole:
-      return item->_conversation.toText();
+      return conversation.toText();
     case Qt::DecorationRole:
       break;
     case Qt::ForegroundRole:
@@ -97,58 +110,65 @@ QVariant TcpPacketModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-void TcpPacketModel::addTcpUpstreamPacket(QPcapTcpPacket packet,
-                                          QPcapTcpConversation conversation) {
-  addPacket(conversation, packet, true);
-}
-
-void TcpPacketModel::addTcpDownstreamPacket(QPcapTcpPacket packet,
-                                            QPcapTcpConversation conversation) {
-  addPacket(conversation, packet, false);
-}
-
-void TcpPacketModel::addPacket(QPcapTcpConversation conversation,
-                               QPcapTcpPacket packet, bool upstream) {
-  //qDebug() << "addPacket" << packet;
-  TreeItem *parent = _conversationItemsById.value(conversation.id());
-  if (!parent) {
-    beginInsertRows(QModelIndex(), _root->_children.size(),
-                    _root->_children.size());
-    parent = new TreeItem(_root, QPcapTcpPacket(), conversation, false,
-                          _root->_children.size());
-    _conversationItemsById.insert(conversation.id(), parent);
-    _root->_children.append(parent);
-    endInsertRows();
-  }
-  beginInsertRows(createIndex(parent->_row, 0, parent),
-                  parent->_children.size(), parent->_children.size());
-  parent->_children.append(new TreeItem(parent, packet, conversation,
-                                        upstream, parent->_children.size()));
-  endInsertRows();
-}
-
 bool TcpPacketModel::hasChildren(const QModelIndex &parent) const {
   if (!parent.isValid())
-    return true;
-  if (parent.internalPointer())
-    return ((TreeItem*)parent.internalPointer())->_parent == _root;
-  return false; // this should not occur
+    return _conversationsCount || canFetchMore(parent);
+  if (parent.internalId() & PACKET_FLAG)
+    return false;
+  return _packetsCount.value(parent.internalId(), false)
+      || canFetchMore(parent);
+}
+
+bool TcpPacketModel::canFetchMore(const QModelIndex &parent) const {
+  //qDebug() << "canFetchMore" << parent.isValid() << parent.internalId();
+  if (!parent.isValid())
+    return _conversationsCount < _data->conversationsCount();
+  quint32 id = parent.internalId();
+  if (id & PACKET_FLAG)
+    return false;
+  return _packetsCount.value(id, 0) < _data->packetCount(parent.row());
+}
+
+void TcpPacketModel::fetchMore(const QModelIndex &parent) {
+  quint32 id = parent.internalId();
+  //qDebug() << "fetchMore" << parent.isValid() << id;
+  if (!parent.isValid()) {
+    int n = _data->conversationsCount() - _conversationsCount;
+    if (n > 0) {
+      n = qMin(n, 10);
+      beginInsertRows(parent, _conversationsCount, _conversationsCount+n-1);
+      //qDebug() << "  conversations:" << n;
+      _conversationsCount += n;
+      endInsertRows();
+    }
+  } else if (!(id & PACKET_FLAG)) {
+    int before = _packetsCount.value(id);
+    int after = _data->packetCount(parent.row());
+    if (after > before) {
+      after = qMin(after, before+10);
+      beginInsertRows(parent, before, after-1);
+      //qDebug() << "  packets:" << parent.row() << after-before;
+      _packetsCount.insert(id, after);
+      endInsertRows();
+    }
+  }
 }
 
 QModelIndex TcpPacketModel::index(QPcapTcpConversation conversation) const {
-  TreeItem *ti = _conversationItemsById.value(conversation.id());
-  return ti ? createIndex(ti->_row, 0, ti) : QModelIndex();
+  int index = _data->conversationIndexById(conversation.id());
+  return index >= 0 ? createIndex(index, 0, (quint32)conversation.id())
+                    : QModelIndex();
 }
 
 QModelIndex TcpPacketModel::index(QPcapTcpPacket packet) const {
-  // TODO optimize, this may need to set conversation reference in the tcp packet (rather than http), which is anyway more logical
-  for (int i = 0; i < _root->_children.size(); ++i) {
-    TreeItem *ti = _root->_children.at(i);
-    for (int j = 0; j < ti->_children.size(); ++j) {
-      TreeItem *tj = ti->_children.at(j);
-      if (tj && tj->_packet == packet)
-        return createIndex(j, 0, tj);
-    }
+  int conversationIndex = _data->conversationIndexByPacketId(packet.id());
+  if (conversationIndex >= 0) {
+    QPcapTcpConversation conversation
+        = _data->conversationAt(conversationIndex);
+    int packetIndex = _data->packetIndexById(conversationIndex, packet.id());
+    if (packetIndex >= 0)
+      return createIndex(packetIndex, 0,
+                         (quint32)conversation.id() | PACKET_FLAG);
   }
   return QModelIndex();
 }
@@ -156,29 +176,39 @@ QModelIndex TcpPacketModel::index(QPcapTcpPacket packet) const {
 QPcapTcpPacket TcpPacketModel::packet(const QModelIndex &index) const {
   if (!index.isValid())
     return QPcapTcpPacket();
-  TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-  if (!item || !item->_parent )
-    return QPcapTcpPacket();
-  return item->_packet;
+  quint32 id = index.internalId();
+  if (id & PACKET_FLAG)
+    return _data->packetAt(_data->conversationIndexById(id & ~PACKET_FLAG),
+                           index.row());
+  return QPcapTcpPacket();
 }
 
 QPcapTcpConversation TcpPacketModel::conversation(
     const QModelIndex &index) const {
   if (!index.isValid())
     return QPcapTcpConversation();
-  TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-  if (!item || !item->_parent )
-    return QPcapTcpConversation();
-  return item->_conversation;
+  int conversationIndex
+      = _data->conversationIndexById(index.internalId() & ~PACKET_FLAG);
+  return conversationIndex >= 0 ? _data->conversationAt(conversationIndex)
+                                : QPcapTcpConversation();
 }
 
-void TcpPacketModel::clear() {
-  emit beginResetModel();
-  //emit beginRemoveRows(QModelIndex(), 0, _root->_children.size()-1);
-  //_root->_children.clear();
-  _conversationItemsById.clear();
-  delete _root;
-  _root = new TreeItem(0, QPcapTcpPacket(), QPcapTcpConversation(), true, 0);
-  //emit endRemoveRows();
-  emit endResetModel();
+void TcpPacketModel::dataReset() {
+  //qDebug() << "dataReset" << _conversationsCount;
+  if (_conversationsCount) {
+    beginRemoveRows(QModelIndex(), 0, _conversationsCount-1);
+    _conversationsCount = 0;
+    _packetsCount.clear();
+    endRemoveRows();
+  }
+}
+
+//#include <QMetaObject>
+void TcpPacketModel::fetchMoreConversations() {
+  //qDebug() << "fetchMoreConversations";
+  QModelIndex root;
+  fetchMore(root);
+  //if (canFetchMore(root))
+  //  QMetaObject::invokeMethod(this, "fetchMoreConversations",
+  //                            Qt::QueuedConnection);
 }

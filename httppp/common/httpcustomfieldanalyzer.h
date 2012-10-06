@@ -46,7 +46,7 @@ class HttpCustomFieldAnalyzer : public QObject {
 
 public:
   explicit HttpCustomFieldAnalyzer(QObject *parent = 0);
-  void connectToLowerStack(QPcapHttpStack *stack);
+  void connectToSource(QPcapHttpStack *stack);
   inline void addFilter(
       QString regex, QPcapHttpStack::QPcapHttpDirection direction
       = QPcapHttpStack::Anystream,
@@ -57,6 +57,7 @@ public:
 
 signals:
   void httpHit(QPcapHttpHit hit);
+  void captureFinished();
 
 public slots:
   void rawHttpHit(QPcapHttpHit hit, QByteArray upstreamData,

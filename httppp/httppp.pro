@@ -32,7 +32,9 @@ SOURCES += \
     util/csvwriter.cpp \
     widget/multipixmapbutton.cpp \
     gui/main-gui.cpp \
-    common/httpcustomfieldanalyzer.cpp
+    common/httpcustomfieldanalyzer.cpp \
+    gui/tcpdata.cpp \
+    gui/httpdata.cpp
 
 HEADERS += \
     gui/httpppmainwindow.h \
@@ -44,7 +46,9 @@ HEADERS += \
     util/csvwriter.h \
     widget/multipixmapbutton.h \
     global.h \
-    common/httpcustomfieldanalyzer.h
+    common/httpcustomfieldanalyzer.h \
+    gui/tcpdata.h \
+    gui/httpdata.h
 
 FORMS += \
     gui/httpppmainwindow.ui

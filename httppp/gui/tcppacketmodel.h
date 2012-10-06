@@ -5,41 +5,17 @@
 #include "qpcaptcppacket.h"
 #include "qpcaptcpconversation.h"
 #include <QIcon>
+#include "tcpdata.h"
 
 class TcpPacketModel : public QAbstractItemModel {
   Q_OBJECT
-private:
-  class TreeItem {
-  public:
-    TreeItem *_parent;
-    QPcapTcpPacket _packet;
-    QPcapTcpConversation _conversation;
-    QList<TreeItem *> _children;
-    /** Means upstream for packets (if _conversation.isNull()) and finished
-      * for conversations.
-      */
-    bool _upstreamFinished;
-    int _row;
-
-    TreeItem(TreeItem *parent, QPcapTcpPacket packet,
-             QPcapTcpConversation conversation, bool upstream, int row)
-      : _parent(parent), _packet(packet), _conversation(conversation),
-        _upstreamFinished(upstream), _row(row) { }
-    ~TreeItem() {
-      qDeleteAll(_children);
-    }
-
-  private:
-    Q_DISABLE_COPY(TreeItem)
-  };
-
-  TreeItem* _root;
-  QHash<quint64,TreeItem*> _conversationItemsById;
+  TcpData *_data;
   QIcon _upstreamIcon, _downstreamIcon;
+  int _conversationsCount;
+  QHash<quint64,int> _packetsCount;
 
 public:
-  explicit TcpPacketModel(QObject *parent = 0);
-  ~TcpPacketModel();
+  explicit TcpPacketModel(QObject *parent, TcpData *data);
   QModelIndex index(int row, int column, const QModelIndex &parent) const;
   QModelIndex parent(const QModelIndex &child) const;
   int rowCount(const QModelIndex &parent) const;
@@ -56,20 +32,13 @@ public:
     * pointed by index belong to.
     */
   QPcapTcpConversation conversation(const QModelIndex &index) const;
-  void clear();
   bool hasChildren(const QModelIndex &parent) const;
+  bool canFetchMore(const QModelIndex &parent) const;
+  void fetchMore(const QModelIndex &parent);
 
-signals:
-  
-public slots:
-  void addTcpUpstreamPacket(QPcapTcpPacket packet,
-                            QPcapTcpConversation conversation);
-  void addTcpDownstreamPacket(QPcapTcpPacket packet,
-                              QPcapTcpConversation conversation);
-
-private:
-  void addPacket(QPcapTcpConversation conversation, QPcapTcpPacket packet,
-                 bool upstream);
+private slots:
+  void dataReset();
+  void fetchMoreConversations();
 };
 
 #endif // TCPPACKETMODEL_H
