@@ -43,7 +43,8 @@ public:
 signals:
   void dataReset();
   void hasMoreConversations();
-  
+  void packetsCountTick(unsigned long count);
+
 public slots:
   void addConversation(QPcapTcpConversation conversation);
   void setConversationFinished(QPcapTcpConversation conversation);

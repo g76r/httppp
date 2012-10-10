@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "qpcaphttpstack.h"
+#include <QAtomicInt>
 
 class HttpCustomFieldAnalyzer : public QObject {
   Q_OBJECT
@@ -16,7 +17,7 @@ class HttpCustomFieldAnalyzer : public QObject {
     int _captureRank;
   public:
     inline QPcapHttpFilterData(
-        QString regex = QString(),
+        QRegExp regex = QRegExp(),
         QPcapHttpStack::QPcapHttpDirection direction
         = QPcapHttpStack::Anystream,
         int captureRank = 1) : _re(regex), _direction(direction),
@@ -30,7 +31,7 @@ class HttpCustomFieldAnalyzer : public QObject {
     QSharedDataPointer<QPcapHttpFilterData> d;
   public:
     inline QPcapHttpFilter(
-        QString regex = QString(),
+        QRegExp regex = QRegExp(),
         QPcapHttpStack::QPcapHttpDirection direction
         = QPcapHttpStack::Anystream,
         int captureRank = 1)
@@ -51,17 +52,25 @@ public:
       QString regex, QPcapHttpStack::QPcapHttpDirection direction
       = QPcapHttpStack::Anystream,
       int captureRank = 1) {
-    _filters.append(QPcapHttpFilter(regex, direction, captureRank));
+    _filters.append(QPcapHttpFilter(QRegExp(regex), direction, captureRank));
   }
   inline void clearFilters() { _filters.clear(); }
 
 signals:
   void httpHit(QPcapHttpHit hit);
+  void captureStarted();
   void captureFinished();
 
 public slots:
   void rawHttpHit(QPcapHttpHit hit, QByteArray upstreamData,
                   QByteArray downstreamData);
+
+private slots:
+  void waitForThreadedComputation();
+
+private:
+  void compute(QPcapHttpHit hit, QByteArray upstreamData,
+               QByteArray downstreamData);
 };
 
 #endif // HTTPCUSTOMFIELDANALYZER_H

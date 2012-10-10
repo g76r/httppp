@@ -93,12 +93,17 @@ void TcpData::addPacket(QPcapTcpPacket packet,
     Conversation *c = _conversations.at(index);
     c->_packets.append(packet);
     _conversationsIndexByPacketId.insert(packet.id(), index);
+    int count = _conversationsIndexByPacketId.size();
+    if (count % 1000 == 0)
+      emit packetsCountTick(count);
   } else
     qWarning() << "TcpData::addPacket with unknown conversation"
                << conversation.id();
 }
 
 void TcpData::captureFinished() {
+  QMutexLocker locker(&_mutex);
+  emit packetsCountTick(_conversationsIndexByPacketId.size());
   emit hasMoreConversations();
 }
 

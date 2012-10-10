@@ -8,7 +8,7 @@
 HttpHitModel::HttpHitModel(QObject *parent, HttpData *data)
   : QAbstractItemModel(parent), _data(data), _hitsCount(0) {
   connect(data, SIGNAL(dataReset()), this, SLOT(dataReset()));
-  connect(data, SIGNAL(hasMoreHits()), this, SLOT(fetchMoreHits()));
+  connect(data, SIGNAL(hitsCountTick(ulong)), this, SLOT(fetchMoreHits()));
 }
 
 QModelIndex HttpHitModel::index(int row, int column,

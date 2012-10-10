@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include "util/csvwriter.h"
 #include <QMetaObject>
+#include <QThreadPool>
 
 static HttpppMainWindow *instance;
 
@@ -72,12 +73,13 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   _httpHitProxyModel->setSourceModel(
         _httpHitModel = new HttpHitModel(this, _httpData));
   ui->httpHitsView->setModel(_httpHitProxyModel);
-  connect(_pcapEngine, SIGNAL(packetsCountTick(ulong)),
+  connect(_tcpData, SIGNAL(packetsCountTick(ulong)),
           this, SLOT(updatePacketsCount(ulong)));
-  connect(_httpStack, SIGNAL(hitsCountTick(ulong)),
+  connect(_httpData, SIGNAL(hitsCountTick(ulong)),
           this, SLOT(updateHitsCount(ulong)));
-  connect(_httpData, SIGNAL(captureFinished()),
-          this, SLOT(captureFinished())); // FIXME
+  connect(_httpData, SIGNAL(captureFinished()), this, SLOT(captureFinished()));
+  connect(_httpStack, SIGNAL(captureFinished()), this, SLOT(releaseThread()));
+  connect(_ipStack, SIGNAL(captureFinished()), this, SLOT(releaseThread()));
   _tcpHttpThread->start();
   _regexThread->start();
 }
@@ -123,6 +125,8 @@ void HttpppMainWindow::loadFile(QString filename) {
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
   ui->labelLoading->setVisible(true);
+  for (int i = 0; i < 2; ++i)
+    QThreadPool::globalInstance()->reserveThread();
   _pcapEngine->loadFile(filename);
 }
 
@@ -325,4 +329,8 @@ void HttpppMainWindow::updateHitsCount(unsigned long count) {
 
 void HttpppMainWindow::captureFinished() {
   ui->labelLoading->setVisible(false);
+}
+
+void HttpppMainWindow::releaseThread() {
+  QThreadPool::globalInstance()->releaseThread();
 }

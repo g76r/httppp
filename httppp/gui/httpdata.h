@@ -22,13 +22,15 @@ public:
 
 signals:
   void dataReset();
-  void hasMoreHits();
+  void hitsCountTick(unsigned long count);
   void captureFinished();
 
 public slots:
   void addHit(QPcapHttpHit hit);
-  void captureFinishing();
   void clear();
+
+private slots:
+  void captureFinishing();
 
 private:
   Q_INVOKABLE void collectGarbage(QList<QPcapHttpHit> garbage);

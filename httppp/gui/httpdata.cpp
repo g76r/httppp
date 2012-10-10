@@ -30,12 +30,12 @@ QPcapHttpHit HttpData::hitAt(int index) const {
 void HttpData::addHit(QPcapHttpHit hit) {
   QMutexLocker locker(&_mutex);
   _hits.append(hit);
-  if (_hits.size() % 1000 == 10)
-    emit hasMoreHits();
+  if (_hits.size() % 100 == 0)
+    emit hitsCountTick(_hits.size());
 }
 
 void HttpData::captureFinishing() {
-  emit hasMoreHits();
+  emit hitsCountTick(_hits.size());
   emit captureFinished();
 }
 

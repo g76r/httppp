@@ -46,18 +46,19 @@ public:
   void loadFile(QString filename);
   void showEvent(QShowEvent *e);
 
+public slots:
+  void loadFileDialog();
+  void reload();
+  void startCaptureDialog();
+  void httpHitsToCsvDialog();
+
 private slots:
   void toggleMessagesPanel();
   void forwardSelection(QModelIndex currentIndex);
   void updatePacketsCount(unsigned long count);
   void updateHitsCount(unsigned long count);
   void captureFinished();
-
-public slots:
-  void loadFileDialog();
-  void reload();
-  void startCaptureDialog();
-  void httpHitsToCsvDialog();
+  void releaseThread();
 
 private:
   void selectConversationInConversations(QPcapTcpConversation conversation);

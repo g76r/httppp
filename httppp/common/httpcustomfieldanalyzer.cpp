@@ -1,4 +1,6 @@
 #include "httpcustomfieldanalyzer.h"
+#include <QtConcurrentRun>
+#include <QTimer>
 
 HttpCustomFieldAnalyzer::HttpCustomFieldAnalyzer(QObject *parent)
   : QObject(parent) {
@@ -7,14 +9,23 @@ HttpCustomFieldAnalyzer::HttpCustomFieldAnalyzer(QObject *parent)
 void HttpCustomFieldAnalyzer::connectToSource(QPcapHttpStack *stack) {
   connect(stack, SIGNAL(httpHit(QPcapHttpHit,QByteArray,QByteArray)),
           this, SLOT(rawHttpHit(QPcapHttpHit,QByteArray,QByteArray)));
-  connect(stack, SIGNAL(captureFinished()), this, SIGNAL(captureFinished()));
+  connect(stack, SIGNAL(captureFinished()),
+          this, SLOT(waitForThreadedComputation()));
+  connect(stack, SIGNAL(captureStarted()), this, SIGNAL(captureStarted()));
 }
 
 void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,
                                          QByteArray upstreamData,
                                          QByteArray downstreamData) {
-  //qDebug() << "looking for custom fields" << _filters.size();
-  if (_filters.size()) {
+  QtConcurrent::run(this, &HttpCustomFieldAnalyzer::compute, hit, upstreamData,
+                    downstreamData);
+}
+
+void HttpCustomFieldAnalyzer::compute(QPcapHttpHit hit,
+                                      QByteArray upstreamData,
+                                      QByteArray downstreamData) {
+  QList<QPcapHttpFilter> filters = _filters; // copy for staying thread safe
+  if (filters.size()) {
     char cookedUpstream[upstreamData.size()+1];
     char cookedDownstream[downstreamData.size()+1];
     int i;
@@ -32,8 +43,8 @@ void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,
       cookedDownstream[i] = ch;
     }
     cookedDownstream[i] = 0;
-    for (int i = 0; i < _filters.size(); ++i) {
-      QPcapHttpFilter f = _filters[i];
+    for (int i = 0; i < filters.size(); ++i) {
+      QPcapHttpFilter f = filters[i];
       QRegExp re = f.re();
       //qDebug() << "testing upstream custom field" << i << f.direction()
       //         << re.pattern() << cookedUpstream.size()
@@ -58,4 +69,11 @@ void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,
     }
   }
   emit httpHit(hit);
+}
+
+void HttpCustomFieldAnalyzer::waitForThreadedComputation() {
+  if (QThreadPool::globalInstance()->activeThreadCount() > 0)
+    QTimer::singleShot(500, this, SLOT(waitForThreadedComputation()));
+  else
+    emit captureFinished();
 }
