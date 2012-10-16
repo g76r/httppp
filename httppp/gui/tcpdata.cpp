@@ -76,6 +76,7 @@ void TcpData::addConversation(QPcapTcpConversation conversation) {
   int size = _conversations.size();
   _conversationsIndexById.insert(conversation.id(), size);
   _conversations.append(new Conversation(conversation));
+  locker.unlock();
   if (size % 1000 == 10)
     emit hasMoreConversations();
 }
@@ -93,17 +94,17 @@ void TcpData::addPacket(QPcapTcpPacket packet,
     Conversation *c = _conversations.at(index);
     c->_packets.append(packet);
     _conversationsIndexByPacketId.insert(packet.id(), index);
-    int count = _conversationsIndexByPacketId.size();
-    if (count % 1000 == 0)
-      emit packetsCountTick(count);
   } else
     qWarning() << "TcpData::addPacket with unknown conversation"
                << conversation.id();
+  ulong count = ++_packetsCount;
+  locker.unlock();
+  if (count % 1000 == 0)
+    emit packetsCountTick(count);
 }
 
 void TcpData::captureFinished() {
-  QMutexLocker locker(&_mutex);
-  emit packetsCountTick(_conversationsIndexByPacketId.size());
+  emit packetsCountTick(_packetsCount);
   emit hasMoreConversations();
 }
 
@@ -118,6 +119,8 @@ void TcpData::clear() {
   _conversations = QList<Conversation*>();
   QMetaObject::invokeMethod(this, "collectGarbage", Qt::QueuedConnection,
                             Q_ARG(QList<Conversation*>, garbage));
+  _packetsCount = 0;
+  locker.unlock();
   emit dataReset();
 }
 

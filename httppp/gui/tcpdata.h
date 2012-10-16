@@ -25,6 +25,7 @@ class TcpData : public QObject {
   QList<Conversation*> _conversations;
   QHash<quint64,int> _conversationsIndexById;
   QHash<quint64,int> _conversationsIndexByPacketId;
+  ulong _packetsCount;
 
 public:
   explicit TcpData(QObject *parent = 0);

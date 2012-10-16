@@ -17,8 +17,12 @@ void HttpCustomFieldAnalyzer::connectToSource(QPcapHttpStack *stack) {
 void HttpCustomFieldAnalyzer::rawHttpHit(QPcapHttpHit hit,
                                          QByteArray upstreamData,
                                          QByteArray downstreamData) {
+#ifndef MONOTHREAD
   QtConcurrent::run(this, &HttpCustomFieldAnalyzer::compute, hit, upstreamData,
                     downstreamData);
+#else
+  compute(hit, upstreamData, downstreamData);
+#endif
 }
 
 void HttpCustomFieldAnalyzer::compute(QPcapHttpHit hit,
@@ -72,8 +76,10 @@ void HttpCustomFieldAnalyzer::compute(QPcapHttpHit hit,
 }
 
 void HttpCustomFieldAnalyzer::waitForThreadedComputation() {
+#ifndef MONOTHREAD
   if (QThreadPool::globalInstance()->activeThreadCount() > 0)
     QTimer::singleShot(500, this, SLOT(waitForThreadedComputation()));
   else
+#endif
     emit captureFinished();
 }

@@ -4,8 +4,6 @@ CONFIG += largefile
 
 QMAKE_CXXFLAGS += -Wextra
 win32:QMAKE_RPATHDIR = # no rpath in linking
-QMAKE_CXXFLAGS_DEBUG += -pg -fno-default-inline -fno-inline -DMONOTHREAD_PROFILING
-QMAKE_LFLAGS_DEBUG += -pg
 
 INCLUDEPATH += ../libqpcap
 win32:LIBS += c:/WpdPack/Lib/wpcap.lib
@@ -20,6 +18,13 @@ linux-g++ {
   OBJECTS_DIR = ../httppp-build-linux/obj
   RCC_DIR = ../httppp-build-linux/rcc
   MOC_DIR = ../httppp-build-linux/moc
+  #QMAKE_CXXFLAGS_DEBUG += -DMONOTHREAD
+  #QMAKE_CXXFLAGS_DEBUG += -pg -fno-default-inline -fno-inline
+  #QMAKE_LFLAGS_DEBUG += -pg
+}
+
+win32 {
+  #QMAKE_CXXFLAGS_DEBUG += -DMONOTHREAD
 }
 
 SOURCES += \

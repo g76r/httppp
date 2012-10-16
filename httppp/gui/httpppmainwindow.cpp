@@ -28,35 +28,35 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->switchField3->appendPixmap(":/icons/updown.svg");
   _pcapEngine = new QPcapEngine;
   _etherStack = new QPcapEthernetStack(0, _pcapEngine);
-  _tcpHttpThread = new QThread(this);
-  _regexThread = new QThread(this);
   _ipStack = new QPcapIPv4Stack(0, _etherStack);
-#ifndef MONOTHREAD_PROFILING
+  _pcapThread = new QThread(this);
+  _tcpHttpThread = new QThread(this);
+#ifndef MONOTHREAD
+  _pcapEngine->moveToThread(_pcapThread);
   // ethernet and ip stacks are almost straightforward and therefore more
   // balanced in the engine thread than the tcp/http one
-  _etherStack->moveToThread(_pcapEngine->thread());
-  _ipStack->moveToThread(_pcapEngine->thread());
+  _etherStack->moveToThread(_pcapThread);
+  _ipStack->moveToThread(_pcapThread);
 #endif
   _tcpStack = new QPcapTcpStack(0, _ipStack);
   _httpStack = new QPcapHttpStack(0, _tcpStack);
-#ifndef MONOTHREAD_PROFILING
+#ifndef MONOTHREAD
   // tcp and http stacks must share same thread because of discardXXXBuffer
   _tcpStack->moveToThread(_tcpHttpThread);
-  _httpStack->moveToThread(_tcpStack->thread());
+  _httpStack->moveToThread(_tcpHttpThread);
 #endif
   _customFieldAnalyzer = new HttpCustomFieldAnalyzer(0);
   _customFieldAnalyzer->connectToSource(_httpStack);
-#ifndef MONOTHREAD_PROFILING
+#ifndef MONOTHREAD
   // custom field analyzer has a separate thread because regex computation costs
   // much cpu
-  // FIXME make it possible to have several regex threads rather than only one
-  _customFieldAnalyzer->moveToThread(_regexThread);
+  _customFieldAnalyzer->moveToThread(_tcpHttpThread);
 #endif
   _tcpData = new TcpData(0);
   _httpData = new HttpData(0);
   _tcpData->connectToSource(_tcpStack);
   _httpData->connectToSource(_customFieldAnalyzer);
-#ifndef MONOTHREAD_PROFILING
+#ifndef MONOTHREAD
   // data object may be in a thread distinct from http and tcp stacks analysis
   // however it has been tested less performant (both longer and mor memory
   // consuming) on a 4 ways 2.6 GHz computer (1 × i7 × 2 cores × 2 threads)
@@ -79,13 +79,16 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
           this, SLOT(updateHitsCount(ulong)));
   connect(_httpData, SIGNAL(captureFinished()), this, SLOT(captureFinished()));
   connect(_httpStack, SIGNAL(captureFinished()), this, SLOT(releaseThread()));
+  connect(_httpStack, SIGNAL(captureFinished()), this, SLOT(releaseThread()));
   connect(_ipStack, SIGNAL(captureFinished()), this, SLOT(releaseThread()));
+  _pcapThread->start();
   _tcpHttpThread->start();
-  _regexThread->start();
 }
 
 HttpppMainWindow::~HttpppMainWindow() {
-  /*_httpStack->deleteLater();
+  // FIXME
+  /*
+  _httpStack->deleteLater();
   _tcpStack->deleteLater();
   _ipStack->deleteLater();
   _etherStack->deleteLater();
@@ -95,11 +98,11 @@ HttpppMainWindow::~HttpppMainWindow() {
   // LATER ensure that objects are deleted, currently they are probably not
   // because deleteLater is likely not to work since threads are exited
   // immediatly
+  _pcapThread.exit();
   _tcpHttpThread->exit();
-  _regexThread->exit();
-  _tcpHttpThread->wait(200);
-  _regexThread->wait(200);*/
-  // FIXME
+  _pcapThread.exit(200);
+  _tcpHttpThread->wait(10);
+  */
   qInstallMsgHandler(0);
   delete ui;
 }
@@ -125,8 +128,9 @@ void HttpppMainWindow::loadFile(QString filename) {
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
   ui->labelLoading->setVisible(true);
-  for (int i = 0; i < 2; ++i)
-    QThreadPool::globalInstance()->reserveThread();
+  QThreadPool::globalInstance()->reserveThread();
+  QThreadPool::globalInstance()->reserveThread();
+  QThreadPool::globalInstance()->reserveThread();
   _pcapEngine->loadFile(filename);
 }
 

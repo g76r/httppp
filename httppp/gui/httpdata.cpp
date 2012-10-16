@@ -30,8 +30,10 @@ QPcapHttpHit HttpData::hitAt(int index) const {
 void HttpData::addHit(QPcapHttpHit hit) {
   QMutexLocker locker(&_mutex);
   _hits.append(hit);
-  if (_hits.size() % 100 == 0)
-    emit hitsCountTick(_hits.size());
+  ulong count = _hits.size();
+  locker.unlock();
+  if (count % 100 == 0)
+    emit hitsCountTick(count);
 }
 
 void HttpData::captureFinishing() {
@@ -48,6 +50,7 @@ void HttpData::clear() {
   _hits = QList<QPcapHttpHit>();
   QMetaObject::invokeMethod(this, "collectGarbage", Qt::QueuedConnection,
                             Q_ARG(QList<QPcapHttpHit>, garbage));
+  locker.unlock();
   emit dataReset();
 }
 
