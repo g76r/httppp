@@ -8,12 +8,14 @@ HttpData::HttpData(QObject *parent) : QObject(parent) {
 void HttpData::connectToSource(QPcapHttpStack *source) {
   connect(source, SIGNAL(httpHit(QPcapHttpHit,QByteArray,QByteArray)),
           this, SLOT(addHit(QPcapHttpHit)));
+  connect(source, SIGNAL(captureStarted()), this, SLOT(captureStarting()));
   connect(source, SIGNAL(captureFinished()), this, SLOT(captureFinishing()));
 }
 
 void HttpData::connectToSource(HttpCustomFieldAnalyzer *source) {
   connect(source, SIGNAL(httpHit(QPcapHttpHit)),
           this, SLOT(addHit(QPcapHttpHit)));
+  connect(source, SIGNAL(captureStarted()), this, SLOT(captureStarting()));
   connect(source, SIGNAL(captureFinished()), this, SLOT(captureFinishing()));
 }
 
@@ -36,8 +38,16 @@ void HttpData::addHit(QPcapHttpHit hit) {
     emit hitsCountTick(count);
 }
 
+void HttpData::captureStarting() {
+  emit captureStarted();
+  emit hitsCountTick(0);
+}
+
 void HttpData::captureFinishing() {
-  emit hitsCountTick(_hits.size());
+  QMutexLocker locker(&_mutex);
+  ulong count = _hits.size();
+  locker.unlock();
+  emit hitsCountTick(count);
   emit captureFinished();
 }
 

@@ -23,6 +23,7 @@ public:
 signals:
   void dataReset();
   void hitsCountTick(unsigned long count);
+  void captureStarted();
   void captureFinished();
 
 public slots:
@@ -30,6 +31,7 @@ public slots:
   void clear();
 
 private slots:
+  void captureStarting();
   void captureFinishing();
 
 private:
