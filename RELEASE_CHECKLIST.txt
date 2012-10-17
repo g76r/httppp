@@ -2,7 +2,7 @@
 - check that both libqpcap and httppp repositories are consistent
 - edit httppp version in global.h
 - commit and tag version in git
-- compile on linux and windows
+- compile on linux and windows (paying attention to use release build config)
 - check compiled versions (among other things the title bar must contain the
   version number)
 - copy packages in web site
