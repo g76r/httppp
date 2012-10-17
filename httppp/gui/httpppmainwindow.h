@@ -38,7 +38,7 @@ private:
   HttpHitModel *_httpHitModel;
   QSortFilterProxyModel *_tcpConversationProxyModel, *_httpHitProxyModel;
   QString _lastLoadedFilename;
-  bool _firstShow;
+  bool _firstShow, _currentlyLoading;
 
 public:
   explicit HttpppMainWindow(QWidget *parent = 0);

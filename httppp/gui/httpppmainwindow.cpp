@@ -10,7 +10,7 @@ static HttpppMainWindow *instance;
 HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   : QMainWindow(parent), ui(new Ui::HttpppMainWindow), _firstShow(true) {
   ui->setupUi(this);
-  ui->labelLoading->setVisible(false);
+  ui->labelLoading->setVisible(_currentlyLoading = false);
   ui->panelsSplitter->setStretchFactor(0, 0);
   ui->panelsSplitter->setStretchFactor(1, 0);
   ui->panelsSplitter->setStretchFactor(2, 1);
@@ -108,8 +108,8 @@ HttpppMainWindow::~HttpppMainWindow() {
 }
 
 void HttpppMainWindow::loadFile(QString filename) {
-  if (_pcapEngine->isRunning()) { // LATER this is not sufficient since there are asynchronous signals
-    qDebug() << "cannot load file when pcap engine is already running";
+  if (_currentlyLoading) {
+    qWarning() << "cannot load file when pcap engine is already running";
     return;
   }
   _tcpData->clear();
@@ -127,7 +127,7 @@ void HttpppMainWindow::loadFile(QString filename) {
     _customFieldAnalyzer->addFilter(
           ui->comboField3->currentText(),
           (QPcapHttpStack::QPcapHttpDirection)ui->switchField3->currentIndex());
-  ui->labelLoading->setVisible(true);
+  ui->labelLoading->setVisible(_currentlyLoading = true);
   QThreadPool::globalInstance()->reserveThread();
   QThreadPool::globalInstance()->reserveThread();
   QThreadPool::globalInstance()->reserveThread();
@@ -332,7 +332,7 @@ void HttpppMainWindow::updateHitsCount(unsigned long count) {
 }
 
 void HttpppMainWindow::captureFinished() {
-  ui->labelLoading->setVisible(false);
+  ui->labelLoading->setVisible(_currentlyLoading = false);
 }
 
 void HttpppMainWindow::releaseThread() {
