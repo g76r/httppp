@@ -8,7 +8,7 @@ General Public License version 3, see LICENSE.txt file content.
 The git repository uses git submodules to handle libqpcap dependency, therefore
 you should use following steps to clone repository and submodules repositories:
 
-git@gitorious.org:httppp/httppp.git
+git clone git@bitbucket.org:g76r/httppp.git
 cd httppp
 git submodule init
 git submodule update
