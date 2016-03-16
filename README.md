@@ -21,11 +21,18 @@ BUILD INSTRUCTIONS
 The git repository uses git submodules to handle libqpcap dependency, therefore
 you should use following steps to clone repository and submodules repositories:
 
+``` bash
 git clone git@gitlab.com:g76r/httppp.git
 cd httppp
 git submodule init
 git submodule update
+```
 
 Then one should build libqpcap before httppp since it's a dependency.
 This can be done with the top directory qmake project or with any external
-programm such as an IDE like Qt Creator.
+programm such as an IDE like Qt Creator:
+
+``` bash
+qmake
+make
+```
