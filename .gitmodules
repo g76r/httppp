@@ -1,4 +1,3 @@
 [submodule "libqpcap"]
 	path = libqpcap
-	#url = git@gitorious.org:libqpcap/libqpcap.git
-        url = git@bitbucket.org:g76r/libqpcap.git
+        url = git@gitlab.com:g76r/libqpcap.git
