@@ -1,5 +1,5 @@
 #include "httpcustomfieldanalyzer.h"
-#include <QtConcurrentRun>
+#include <QtConcurrent/QtConcurrentRun>
 #include <QTimer>
 
 HttpCustomFieldAnalyzer::HttpCustomFieldAnalyzer(QObject *parent)

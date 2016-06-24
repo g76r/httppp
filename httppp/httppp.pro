@@ -1,15 +1,27 @@
+QT += gui widgets
 TEMPLATE = app
 TARGET = httppp
-CONFIG += largefile
+CONFIG += largefile c++11
+
+contains(QT_VERSION, ^4\\..*) {
+  message("Cannot build with Qt version $${QT_VERSION}.")
+  error("Use Qt 5.")
+}
 
 QMAKE_CXXFLAGS += -Wextra
 win32:QMAKE_RPATHDIR = # no rpath in linking
 
 INCLUDEPATH += ../libqpcap
+LIBS += -lqpcap
+!win32:LIBS += -lqpcap -L../libqpcap
 win32:LIBS += c:/WpdPack/Lib/wpcap.lib
-!win32:LIBS += -lpcap -lqpcap -L../libqpcap
-win32:CONFIG(release, declarative_debug|debug|release):LIBS += ../libqpcap-build-windows/release/qpcap.dll
-win32:!CONFIG(release, declarative_debug|debug|release):LIBS += ../libqpcap-build-windows/debug/qpcap.dll
+win32:release:LIBS += -L../build-libqpcap-windows/release
+win32:debug:LIBS += -L../build-libqpcap-windows/debug
+
+exists(/usr/bin/ccache):QMAKE_CXX = ccache g++
+exists(/usr/bin/ccache):QMAKE_CXXFLAGS += -fdiagnostics-color=always
+QMAKE_CXXFLAGS += -Wextra -Woverloaded-virtual
+unix:debug:QMAKE_CXXFLAGS += -ggdb
 
 linux-g++ {
   UI_DIR = ../httppp-build-linux/ui

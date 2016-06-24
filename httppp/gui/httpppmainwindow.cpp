@@ -4,6 +4,7 @@
 #include "util/csvwriter.h"
 #include <QMetaObject>
 #include <QThreadPool>
+#include <QtDebug>
 
 static HttpppMainWindow *instance;
 
@@ -16,7 +17,7 @@ HttpppMainWindow::HttpppMainWindow(QWidget *parent)
   ui->panelsSplitter->setStretchFactor(2, 1);
   ui->panelsSplitter->setStretchFactor(3, 0);
   instance = this;
-  qInstallMsgHandler(staticMessageHandler);
+  qInstallMessageHandler(staticMessageHandler);
   ui->switchField1->appendPixmap(":/icons/up.svg");
   ui->switchField1->appendPixmap(":/icons/down.svg");
   ui->switchField1->appendPixmap(":/icons/updown.svg");
@@ -103,7 +104,7 @@ HttpppMainWindow::~HttpppMainWindow() {
   _pcapThread.exit(200);
   _tcpHttpThread->wait(10);
   */
-  qInstallMsgHandler(0);
+  qInstallMessageHandler(0);
   delete ui;
 }
 
@@ -134,13 +135,18 @@ void HttpppMainWindow::loadFile(QString filename) {
   _pcapEngine->loadFile(filename);
 }
 
-void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
+void HttpppMainWindow::staticMessageHandler(
+    QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+  Q_UNUSED(context)
   if (!instance)
     return;
   QString prefix = QString::number(type);
   switch (type) {
   case QtDebugMsg:
     prefix = "D";
+    break;
+  case QtInfoMsg:
+    prefix = "I";
     break;
   case QtWarningMsg:
     prefix = "W";
@@ -151,7 +157,7 @@ void HttpppMainWindow::staticMessageHandler(QtMsgType type, const char *msg) {
   case QtFatalMsg:
     prefix = "F";
   }
-  QString text = QString("%1: %2").arg(prefix).arg(msg?:"<null>");
+  QString text = QString("%1: %2").arg(prefix).arg(msg);
   QMetaObject::invokeMethod(instance, "messageHandler",
                             Qt::QueuedConnection, Q_ARG(QString, text));
 }

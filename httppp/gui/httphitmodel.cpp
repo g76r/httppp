@@ -16,7 +16,7 @@ QModelIndex HttpHitModel::index(int row, int column,
   Q_UNUSED(parent)
   if (row < 0 || row >= _hitsCount)
     return QModelIndex();
-  return createIndex(row, column, 0);
+  return createIndex(row, column, nullptr);
 }
 
 QModelIndex HttpHitModel::parent(const QModelIndex &child) const {
