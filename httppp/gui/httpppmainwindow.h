@@ -65,7 +65,8 @@ private:
   void selectConversationInPackets(QPcapTcpConversation conversation);
   void selectPacketInPackets(QPcapTcpPacket packet);
   void showDetails(QPcapTcpConversation conversation);
-  void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet);
+  void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet1,
+                   QPcapTcpPacket packet2 = QPcapTcpPacket());
   static void staticMessageHandler(
       QtMsgType type, const QMessageLogContext &context, const QString &msg);
   Q_INVOKABLE void messageHandler(QString text, bool canTriggerAutoOpen);

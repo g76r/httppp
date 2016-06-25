@@ -224,8 +224,9 @@ void HttpppMainWindow::forwardSelection(QModelIndex currentIndex) {
           _httpHitProxyModel->mapToSource(currentIndex));
     selectConversationInConversations(hit.conversation());
     selectPacketInPackets(hit.firstRequestPacket());
-    // LATER should display all packets in HTTP hit rather than first one
-    showDetails(QPcapTcpConversation(), hit.firstRequestPacket());
+    // LATER should display all packets in HTTP hit rather than first ones
+    showDetails(QPcapTcpConversation(), hit.firstRequestPacket(),
+                    hit.firstResponsePacket());
   } else {
     //qDebug() << "forwardSelection from nowhere";
   }
@@ -279,30 +280,50 @@ void HttpppMainWindow::selectPacketInPackets(QPcapTcpPacket packet) {
 void HttpppMainWindow::showDetails(QPcapTcpConversation conversation) {
   if (ui->detailsView->isVisible()) {
     QString text;
+    text.append(QStringLiteral("<p>In conversation %1</p>")
+                .arg(conversation.id()));
     foreach (QPcapTcpPacket p, conversation.packets()) {
       QByteArray ba = p.payload();
       ba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
           .replace("\n", "<br/>");
       bool upstream = conversation.matchesSameStream(p);
-      text.append(QString("<p><font color=%1><pre>%2</pre></font></p>")
-                  .arg(upstream ? "red" : "blue").arg(ba.constData()));
+      text.append(QStringLiteral("<p><font color=%1><pre>%2</pre></font></p>")
+                  .arg(upstream ? QStringLiteral("red")
+                                : QStringLiteral("blue"))
+                  .arg(ba.constData()));
     }
     ui->detailsView->setHtml(text);
   }
 }
 
 void HttpppMainWindow::showDetails(QPcapTcpConversation conversation,
-                                   QPcapTcpPacket packet) {
+                                   QPcapTcpPacket packet1,
+                                   QPcapTcpPacket packet2) {
   if (ui->detailsView->isVisible()) {
-    QByteArray ba = packet.payload();
+    QString text;
+    text.append(QStringLiteral("<p>In conversation %1</p>")
+                .arg(conversation.id()));
+    bool upstream = conversation.isNull()
+        || conversation.matchesSameStream(packet1);
+    QByteArray ba = packet1.payload();
     ba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         .replace("\n", "<br/>");
-    bool upstream = conversation.isNull()
-        || conversation.matchesSameStream(packet);
-    ui->detailsView->setHtml(
-          QString("<p>%1</p><p><font color=%2><pre>%3</pre></font></p>")
-          .arg(packet.toText()).arg(upstream ? "red" : "blue")
+    text.append(
+          QStringLiteral("<p>%1</p><p><font color=%2><pre>%3</pre></font></p>")
+          .arg(packet1.toText())
+          .arg(upstream ? QStringLiteral("red") : QStringLiteral("blue"))
           .arg(ba.constData()));
+    if (!packet2.isNull()) {
+      ba = packet2.payload();
+      ba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+          .replace("\n", "<br/>");
+      text.append(
+            QStringLiteral("<p>%1</p><p><font color=blue><pre>%2</pre>"
+                           "</font></p>")
+            .arg(packet2.toText())
+            .arg(ba.constData()));
+    }
+    ui->detailsView->setHtml(text);
   }
 }
 
