@@ -1,0 +1,12 @@
+stages:
+- build
+
+build_main:
+  stage: build
+  script:
+    - git submodule update --init
+    - qmake
+    - make
+  tags:
+    - qt
+    - c++
