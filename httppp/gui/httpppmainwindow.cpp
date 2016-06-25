@@ -143,30 +143,34 @@ void HttpppMainWindow::staticMessageHandler(
   QString prefix = QString::number(type);
   switch (type) {
   case QtDebugMsg:
-    prefix = "D";
+    prefix = QStringLiteral("DEBUG: ");
     break;
   case QtInfoMsg:
-    prefix = "I";
+    prefix = QStringLiteral("INFO: ");
     break;
   case QtWarningMsg:
-    prefix = "W";
+    prefix = QStringLiteral("WARN: ");
     break;
   case QtCriticalMsg:
-    prefix = "C";
+    prefix = QStringLiteral("CRIT: ");
     break;
   case QtFatalMsg:
-    prefix = "F";
+    prefix = QStringLiteral("FATAL: ");
   }
-  QString text = QString("%1: %2").arg(prefix).arg(msg);
+  // LATER add timestamp
+  QString text = QString("%1%2").arg(prefix).arg(msg);
   QMetaObject::invokeMethod(instance, "messageHandler",
-                            Qt::QueuedConnection, Q_ARG(QString, text));
+                            Qt::QueuedConnection,
+                            Q_ARG(QString, text),
+                            Q_ARG(bool,
+                                  type != QtDebugMsg && type != QtInfoMsg));
 }
 
-void HttpppMainWindow::messageHandler(QString text) {
+void HttpppMainWindow::messageHandler(QString text, bool canTriggerAutoOpen) {
   if (!ui->pushEnableMessages->isChecked())
     return;
   ui->messages->appendPlainText(text);
-  if (ui->pushAutoOpenMessages->isChecked()) {
+  if (canTriggerAutoOpen && ui->pushAutoOpenMessages->isChecked()) {
     QList<int> sizes = ui->mainSplitter->sizes();
     if (sizes[1] == 0) {
       sizes[1] = ui->panelMessages->sizeHint().height();

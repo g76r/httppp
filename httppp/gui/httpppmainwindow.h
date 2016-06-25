@@ -68,7 +68,7 @@ private:
   void showDetails(QPcapTcpConversation conversation, QPcapTcpPacket packet);
   static void staticMessageHandler(
       QtMsgType type, const QMessageLogContext &context, const QString &msg);
-  Q_INVOKABLE void messageHandler(QString text);
+  Q_INVOKABLE void messageHandler(QString text, bool canTriggerAutoOpen);
 };
 
 #endif // HTTPPPMAINWINDOW_H
