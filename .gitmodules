@@ -1,3 +1,4 @@
 [submodule "libqpcap"]
 	path = libqpcap
-        url = git@gitlab.com:g76r/libqpcap.git
+	url = git://github.com/g76r/libqpcap.git
+	pushURL = git@gitlab.com:g76r/libqpcap.git
