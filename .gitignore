@@ -1,7 +1,8 @@
 /Makefile
 /httppp/Makefile
 *.pro.user*
-*-build*
+/build-*
+/*-build-*
 /httppp/httppp
 /httppp/thttppp
 /httppp/*.pcap
