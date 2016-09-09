@@ -13,7 +13,7 @@ linux {
 }
 
 # git version directly as a -D, simpler but requires git on every build environment
-#DEFINES += VERSION="\\\"$(shell git describe --tags --long --always)\\\""
+#DEFINES += VERSION="\\\"$(shell git describe --always)\\\""
 
 contains(QT_VERSION, ^4\\..*) {
   message("Cannot build with Qt version $${QT_VERSION}.")

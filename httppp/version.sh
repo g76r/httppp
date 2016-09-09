@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION="$(git describe --tags --long --always 2> /dev/null)"
+VERSION="$(git describe --always 2> /dev/null)"
 
 cat <<!
 #ifdef VERSION
