@@ -3,6 +3,18 @@ TEMPLATE = app
 TARGET = httppp
 CONFIG += largefile c++11
 
+# git version in version.h
+linux {
+  version.target = version.h
+  version.commands = ./version.sh > version.h
+  version.depends = FORCE
+  QMAKE_EXTRA_TARGETS += version
+  PRE_TARGETDEPS += version.h
+}
+
+# git version directly as a -D, simpler but requires git on every build environment
+#DEFINES += VERSION="\\\"$(shell git describe --tags --long --always)\\\""
+
 contains(QT_VERSION, ^4\\..*) {
   message("Cannot build with Qt version $${QT_VERSION}.")
   error("Use Qt 5.")

@@ -1,6 +1,7 @@
 /Makefile
 /httppp/Makefile
 *.pro.user*
+ui_*.h
 /build-*
 /*-build-*
 /httppp/httppp

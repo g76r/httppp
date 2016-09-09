@@ -1,13 +1,12 @@
 - check there are no open bugs
 - check that both libqpcap and httppp repositories are consistent
-- edit httppp version in global.h
 - commit and tag version in git
+- clean all compilation files (make clean; qmake -r)
 - compile on linux and windows (paying attention to use release build config)
 - check compiled versions (among other things the title bar must contain the
   version number)
 - copy packages in web site
-- revert version label commit
 - push libpcap and httppp repositories
 - also push version tags
 - update online web site (push and rebase)
-- publish new release on freshmeat^Wfreecode
+- publish new release on freshmeat^Wfreecode^W
