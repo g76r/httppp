@@ -5,5 +5,5 @@ default: all
 all: targz
 
 targz:
-	rm -f httppp-linux-i386.tar.gz
-	tar zchf httppp-linux-i386.tar.gz httppp
+	rm -f httppp-linux-amd64.tar.bz2
+	tar jchf httppp-linux-amd64.tar.bz2 httppp
